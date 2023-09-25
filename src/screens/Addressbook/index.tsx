@@ -119,11 +119,11 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		// TODO uncomment when cache is available
 		const e = await ttlCache.getObj<NostrEvent>(hex)
 		if (e) {
-			console.log('cache hit')
+			l('cache hit')
 			// events.map(e => [e.pubkey, parseProfileContent<IProfileContent>(e)]))
 			return setContacts(prev => prev.map(c => c[0] === hex ? [c[0], parseProfileContent<IProfileContent>(e)] : c))
 		}
-		console.log('cache miss')
+		l('cache miss')
 		const sub = relay.subscribePool({
 			relayUrls: userRelays,
 			authors: [hex],
