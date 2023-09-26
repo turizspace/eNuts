@@ -16,12 +16,10 @@ interface IContactPreviewProps {
 	contact: TContact | [string, Partial<IProfileContent>]
 	handleContactPress: () => void
 	handleSend: () => void
-	isFirst: boolean
-	isLast: boolean
 	isPayment?: boolean
 }
 
-export default function ContactPreview({ contact, handleContactPress, handleSend, isFirst, isLast, isPayment }: IContactPreviewProps) {
+export default function ContactPreview({ contact, handleContactPress, handleSend, isPayment }: IContactPreviewProps) {
 	const { t } = useTranslation([NS.common])
 	const { color, highlight } = useThemeContext()
 
@@ -36,7 +34,7 @@ export default function ContactPreview({ contact, handleContactPress, handleSend
 			}}
 			disabled={!isPayment}
 			style={[
-				styles.container, { paddingTop: isFirst ? 10 : 0, paddingBottom: isLast ? 10 : 0 }
+				styles.container
 			]}
 		>
 			<TouchableOpacity
@@ -93,7 +91,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
-		paddingHorizontal: 20,
+		padding: 20,
 	},
 	colWrap: {
 		flexDirection: 'row',

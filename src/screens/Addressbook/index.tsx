@@ -318,12 +318,12 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 								data={contacts}
 								estimatedItemSize={70}
 								viewabilityConfig={{
-									minimumViewTime: 250,
+									minimumViewTime: 500,
 									itemVisiblePercentThreshold: 10,
 								}}
 								onViewableItemsChanged={onViewableItemsChanged}
 								keyExtractor={item => item[0]}
-								renderItem={({ item, index }) => (
+								renderItem={({ item }) => (
 									<ContactPreview
 										contact={item}
 										handleContactPress={() => handleContactPress({ contact: item[1], npub: nip19.npubEncode(item[0]) })}
@@ -333,8 +333,6 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 												name: getNostrUsername(item[1])
 											})
 										}}
-										isFirst={index === 0}
-										isLast={index === contacts.length - 1}
 										isPayment={route.params?.isMelt || route.params?.isSendEcash}
 									/>
 								)}
@@ -428,7 +426,7 @@ const styles = StyleSheet.create({
 	},
 	contactSeparator: {
 		marginLeft: 80,
-		marginVertical: 10,
+		marginVertical: -10,
 		marginRight: 20,
 	},
 })
