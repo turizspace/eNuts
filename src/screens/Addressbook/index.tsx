@@ -31,7 +31,6 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 
 import ContactPreview from './ContactPreview'
-// import UserProfile from './UserProfile'
 
 /****************************************************************************/
 /* State issues will occur while debugging Android and IOS at the same time */
@@ -62,98 +61,31 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	const [newNpubModal, setNewNpubModal] = useState(false)
 	const ref = useRef<NostrData>()
 	const isSending = route.params?.isMelt || route.params?.isSendEcash
-	
-	const initNostr = useCallback((hex: string) => {
-		if (!hex) { return l('no hex') }
-		if (!ref?.current?.hex || hex !== ref.current.hex) {
-			ref.current = new NostrData(hex, {
-				onUserMetadataChanged: p => setUserProfile(p),
-				onContactsChanged: hexArr =>
-					setContacts(prev => prev?.length
-						? prev
-						: hexArr.map(x => ([x, undefined]))),
-				onProfileChanged: profile => setContacts(prev => prev
-					.map(x => x[0] === profile?.[0] ? profile : x)),
-				userRelays
-			})
-		}
-		stopLoading()
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
 
-	// gets user data from cache or relay
-	const initUserData = useCallback((hex: string) => {
-		if (!hex || (userProfile && contacts.length)) {
-			l('no pubKey or user data already available')
-			stopLoading()
-			return
-		}
-		initNostr(hex)
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
-
-	// Gets metadata from cache or relay for contact in viewport
-	const setMetadata = useCallback((item: TContact) => {
-		if (item[0] && item[1]) { return }
-		const hex = item[0]
-		l({ itemInSetMetadata: item })
-		void ref?.current?.setupMetadataSub(hex)
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
-
-	// checks and saves already seen items to avoid multiple data fetch. Otherwise gets metadata from cache or relay
-	const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-		setAlreadySeen(prev => {
-			for (let i = 0; i < viewableItems.length; i++) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				const { item }: { item: TContact } = viewableItems[i]
-				if (!prev.includes(item[0])) { void setMetadata(item) }
-			}
-			return uniq([...prev, ...viewableItems.map((v: { item: TContact }) => v.item[0])])
-		})
-	}, [setMetadata])
-
-	// User is in payment process
-	const handleMelt = (contact?: IProfileContent) => {
-		if (!route.params) { return }
-		const { isMelt, mint, balance } = route.params
-		// user wants to melt to a contact address
-		if (contact) {
-			if (!contact.lud16) {
-				// melting target contact has no lnurl
-				openPromptAutoClose({ msg: 'Receiver has no LNURL' })
+	// check if user has nostr data saved previously
+	useEffect(() => {
+		startLoading()
+		void (async () => {
+			const [storedNPub, storedPubKeyHex, storedUserRelays] = await Promise.all([
+				store.get(STORE_KEYS.npub),
+				store.get(STORE_KEYS.npubHex),
+				store.getObj<TUserRelays>(STORE_KEYS.relays),
+			])
+			// user has no nostr data yet
+			if (!storedNPub || !storedPubKeyHex) {
+				setNewNpubModal(true)
+				stopLoading()
 				return
 			}
-			navigation.navigate('selectAmount', { isMelt, lnurl: contact.lud16, mint, balance })
-			return
-		}
-		// user wants to melt to his own lnurl
-		if (!userProfile?.lud16) {
-			openPromptAutoClose({ msg: t('FoundNoLnurl') })
-			return
-		}
-		navigation.navigate('selectAmount', { isMelt, lnurl: userProfile?.lud16, mint, balance })
-	}
+			// user has nostr data, set states
+			setPubKey({ encoded: storedNPub || '', hex: storedPubKeyHex || '' })
+			setUserRelays(storedUserRelays || [])
+			initNostr(storedPubKeyHex)
+		})()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
 
-	const handleEcash = (receiverNpub?: string, receiverName?: string) => {
-		if (!route.params) { return }
-		const { mint, balance, isSendEcash } = route.params
-		navigation.navigate(
-			'selectAmount',
-			{
-				mint,
-				balance,
-				isSendEcash,
-				nostr: {
-					senderName: getNostrUsername(userProfile),
-					receiverNpub: (nip19.decode(receiverNpub || '').data || '') as string,
-					receiverName,
-				},
-			}
-		)
-	}
-
-	// Paste/Clear input for LNURL/LN invoice
+	// handle npub input field (pressing paste label)
 	const handleInputLabelPress = async () => {
 		// clear input
 		if (pubKey.encoded.length) {
@@ -173,6 +105,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		if (clipboard.startsWith('npub')) {
 			pub = { encoded: clipboard, hex: nip19.decode(clipboard).data as string || '' }
 			setPubKey(pub)
+			// start initialization of nostr data
 			await handleNewNpub(pub)
 			return
 		}
@@ -185,30 +118,74 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			stopLoading()
 			return
 		}
-		// close modal
+		// start initialization of nostr data
 		await handleNewNpub(pub)
 	}
 
+	// handle new pasted npub and initialize nostr data
 	const handleNewNpub = async (pub: { encoded: string, hex: string }) => {
 		// generate new secret key
 		const sk = generatePrivateKey() // `sk` is a hex string
 		const pk = getPublicKey(sk)		// `pk` is a hex string
 		setNutPub(pk)
 		await Promise.allSettled([
-			store.set(STORE_KEYS.npub, pub.encoded), // save nostr encoded pubKey
-			store.set(STORE_KEYS.npubHex, pub.hex),	// save nostr hex pubKey
+			store.set(STORE_KEYS.npub, pub.encoded), 	// save nostr encoded pubKey
+			store.set(STORE_KEYS.npubHex, pub.hex),		// save nostr hex pubKey
 			store.set(STORE_KEYS.nutpub, pk),			// save enuts hex pubKey
 			secureStore.set(SECRET, sk)					// save nostr secret generated by enuts for nostr DM interactions
 		])
-		initUserData(pub.hex)
+		initNostr(pub.hex)
 	}
 
-	const handleContactPress = ({ contact, npub, isUser }: { contact?: IProfileContent, npub?: string, isUser?: boolean }) => {
-		// add new npub
-		if (!pubKey.encoded || !contacts.length) {
-			setNewNpubModal(true)
+	// gets nostr data from cache or relay
+	const initNostr = useCallback((hex: string) => {
+		if (!hex || (userProfile && contacts.length)) {
+			l('no hex or user data already available')
+			stopLoading()
 			return
 		}
+		// create new class instance if there is none or if there is a new hex
+		if (!ref?.current?.hex || hex !== ref.current.hex) {
+			ref.current = new NostrData(hex, {
+				onUserMetadataChanged: p => setUserProfile(p),
+				onContactsChanged: hexArr =>
+					setContacts(prev => prev?.length
+						? prev
+						: hexArr.map(x => ([x, undefined]))),
+				onProfileChanged: profile => {
+					setContacts(prev => prev.map(x => x[0] === profile?.[0] ? profile : x))
+				},
+				userRelays
+			})
+		}
+		stopLoading()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	// Gets metadata from cache or relay for contact in viewport
+	const setMetadata = useCallback((item: TContact) => {
+		// all profile data already available
+		if (item[0] && item[1]) { return }
+		const hex = item[0]
+		l({ itemInSetMetadata: item })
+		void ref?.current?.setupMetadataSub(hex)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	// checks and saves already seen items to avoid multiple data fetch. Otherwise gets metadata from cache or relay
+	const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+		setAlreadySeen(prev => {
+			for (let i = 0; i < viewableItems.length; i++) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+				const { item }: { item: TContact } = viewableItems[i]
+				if (!prev.includes(item[0])) { void setMetadata(item) }
+			}
+			return uniq([...prev, ...viewableItems.map((v: { item: TContact }) => v.item[0])])
+		})
+	}, [setMetadata])
+
+	// user opens contact screen or proceeds with a payment related action
+	const handleContactPress = ({ contact, npub, isUser }: { contact?: IProfileContent, npub?: string, isUser?: boolean }) => {
 		// navigate to contact screen
 		if (contact && !isUser && !route.params?.isSendEcash && !route.params?.isMelt) {
 			navigation.navigate('Contact', {
@@ -239,7 +216,48 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		})
 	}
 
-	// start sending ecash via nostr or melting to a LNURL from a nostr contact
+	// user is in melting payment process
+	const handleMelt = (contact?: IProfileContent) => {
+		if (!route.params) { return }
+		const { isMelt, mint, balance } = route.params
+		// user wants to melt to a contact address
+		if (contact) {
+			if (!contact.lud16) {
+				// melting target contact has no lnurl
+				openPromptAutoClose({ msg: 'Receiver has no LNURL' })
+				return
+			}
+			navigation.navigate('selectAmount', { isMelt, lnurl: contact.lud16, mint, balance })
+			return
+		}
+		// user wants to melt to his own lnurl
+		if (!userProfile?.lud16) {
+			openPromptAutoClose({ msg: t('FoundNoLnurl') })
+			return
+		}
+		navigation.navigate('selectAmount', { isMelt, lnurl: userProfile?.lud16, mint, balance })
+	}
+
+	// user is in ecash payment process
+	const handleEcash = (receiverNpub?: string, receiverName?: string) => {
+		if (!route.params) { return }
+		const { mint, balance, isSendEcash } = route.params
+		navigation.navigate(
+			'selectAmount',
+			{
+				mint,
+				balance,
+				isSendEcash,
+				nostr: {
+					senderName: getNostrUsername(userProfile),
+					receiverNpub: (nip19.decode(receiverNpub || '').data || '') as string,
+					receiverName,
+				},
+			}
+		)
+	}
+
+	// user presses the send ecash button
 	const handleSend = async ({ npub, name }: { npub: string, name?: string }) => {
 		const mintsWithBal = await getMintsBalances()
 		const mints = await getCustomMintNames(mintsWithBal.map(m => ({ mintUrl: m.mintUrl })))
@@ -249,7 +267,6 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			receiverNpub: npub,
 			receiverName: name,
 		}
-		// TODO this could potentially written in shorter form
 		if (nonEmptyMints.length === 1) {
 			navigation.navigate('selectAmount', {
 				mint: mints.find(m => m.mintUrl === nonEmptyMints[0].mintUrl) || { mintUrl: 'N/A', customName: 'N/A' },
@@ -267,29 +284,6 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			nostr,
 		})
 	}
-
-	// check if user has nostr data saved previously
-	useEffect(() => {
-		startLoading()
-		void (async () => {
-			const [storedNPub, storedPubKeyHex, stroedUserRelays] = await Promise.all([
-				store.get(STORE_KEYS.npub),
-				store.get(STORE_KEYS.npubHex),
-				store.getObj<TUserRelays>(STORE_KEYS.relays),
-			])
-			if (!storedNPub) { setNewNpubModal(true) }
-			l({ storedPubKeyHex })
-			if (!storedPubKeyHex) {
-				stopLoading()
-				return
-			}
-			initNostr(storedPubKeyHex)
-			setPubKey({ encoded: storedNPub || '', hex: storedPubKeyHex || '' })
-			if (stroedUserRelays?.length) { setUserRelays(stroedUserRelays) }
-			stopLoading()
-		})()
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
 
 	return (
 		<View style={[globals(color).container, styles.container]}>
