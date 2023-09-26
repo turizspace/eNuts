@@ -205,7 +205,10 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			handleEcash(npub, getNostrUsername(contact))
 			return
 		}
-		if (!userProfile) { return }
+		if (!userProfile || !contact) {
+			openPromptAutoClose({msg: t('noProfile')})
+			return
+		}
 		// navigate to user profile
 		navigation.navigate('Contact', {
 			contact: userProfile,

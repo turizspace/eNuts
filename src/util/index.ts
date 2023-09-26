@@ -145,7 +145,7 @@ export async function getInvoiceFromLnurl(address: string, amount: number) {
 		const [user, host] = address.split('@')
 		amount *= 1000
 		const resp = await fetch(`https://${host}/.well-known/lnurlp/${user}`)
-		const { tag, callback, minSendable, maxSendable } = await resp.json<ILnUrl>() 
+		const { tag, callback, minSendable, maxSendable } = await resp.json<ILnUrl>()
 		// const { tag, callback, minSendable, maxSendable } = await (await fetch(`https://${host}/.well-known/lnurlp/${user}`)).json<ILnUrl>()
 		if (tag === 'payRequest' && minSendable <= amount && amount <= maxSendable) {
 			const resp = await fetch(`${callback}?amount=${amount}`)

@@ -220,7 +220,8 @@
 		"supportDev": "Zap the devs",
 		"supportHint": "Every contribution, no matter the size, makes a significant impact. Confirmation screen is under development.",
 		"newToken": "New Cashu token",
-		"disclaimerHint": "This disclaimer should be taken seriously and should not be ignored or underestimated. We appreciate your interest in this project and will continue to work on improving it."
+		"disclaimerHint": "This disclaimer should be taken seriously and should not be ignored or underestimated. We appreciate your interest in this project and will continue to work on improving it.",
+		"noProfile": "No profile found"
 	},
 	"error": {
 		"addAllMintIdsErr": "Error while getting keyset ids from mint",

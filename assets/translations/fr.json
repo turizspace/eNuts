@@ -217,7 +217,8 @@
 		"supportDev": "Zap le développement",
 		"supportHint": "Chaque contribution, quelle que soit sa taille, a un impact significatif. L'écran de confirmation est en cours de développement.",
 		"newToken": "Nouveau Cashu Token",
-		"disclaimerHint": "Cette clause de non-responsabilité doit être prise au sérieux et ne doit pas être ignorée ni sous-estimée. Nous apprécions votre intérêt pour ce projet et continuerons à travailler à son amélioration."
+		"disclaimerHint": "Cette clause de non-responsabilité doit être prise au sérieux et ne doit pas être ignorée ni sous-estimée. Nous apprécions votre intérêt pour ce projet et continuerons à travailler à son amélioration.",
+		"noProfile": "Aucun profil trouvé"
 	},
 	"error": {
 		"addAllMintIdsErr": "Erreur lors de l'obtention de l'ensemble de clés de la mint",

@@ -80,7 +80,7 @@ export default function ContactPage({ navigation, route }: IContactPageProps) {
 			/>
 			{/* Contact pictures overview */}
 			<View style={{ zIndex: 5 }}>
-				<ProfileBanner uri={contact?.banner} isUser={isUser} />
+				<ProfileBanner hex={npub} uri={contact?.banner} />
 				<View style={styles.profilePicContainer}>
 					<View style={{ width: 100, height: 100, borderRadius: 50, overflow: 'hidden' }}>
 						<ProfilePic
