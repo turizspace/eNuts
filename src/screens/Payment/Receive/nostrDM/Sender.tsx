@@ -32,7 +32,10 @@ export default function Sender({ contact, navigation }: ISenderProps) {
 			disabled={!contact?.[1]}
 		>
 			<View style={styles.picNameWrap}>
-				<ProfilePic uri={contact?.[1]?.picture} />
+				<ProfilePic
+					hex={contact?.[0] || ''}
+					uri={contact?.[1]?.picture}
+				/>
 				{contact?.[1] ?
 					<View>
 						<Username
