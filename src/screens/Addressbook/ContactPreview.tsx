@@ -44,7 +44,12 @@ export default function ContactPreview({ contact, handleContactPress, handleSend
 				disabled={isPayment}
 				style={styles.colWrap}
 			>
-				<ProfilePic size={50} uri={contact[1]?.picture} overlayColor={color.INPUT_BG} />
+				<ProfilePic
+					hex={contact[0]}
+					size={50}
+					uri={contact[1]?.picture}
+					overlayColor={color.INPUT_BG}
+				/>
 				{contact[1] ?
 					<View>
 						<Username

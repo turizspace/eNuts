@@ -1,23 +1,18 @@
 import { PlusIcon, UserIcon } from '@comps/Icons'
+import { imgProxy } from '@nostr/consts'
 import { useThemeContext } from '@src/context/Theme'
-// import { l } from '@src/logger'
-import { isStr } from '@src/util'
 import { highlight as hi } from '@styles'
+import { isStr } from '@util'
 import { Image } from 'expo-image'
 import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 
-export type TNostrImg = INostrImgBanner & INostrImgPicture & { url: string }
-interface INostrImgBanner {
-	hex?: string
-	kind?: 'banner'
-	width?: 600 | 1200
+interface INostrImg {
+	hex: string
+	kind?: 'picture' | 'banner'
+	width?: 64 | 192 | 600 | 1200
 }
-interface INostrImgPicture {
-	hex?: string
-	kind?: 'picture'
-	width?: 64 | 192
-}
+
 interface IProfilePicProps {
 	uri?: string
 	size?: number
@@ -26,7 +21,7 @@ interface IProfilePicProps {
 	overlayColor?: string
 }
 
-export default function ProfilePic({ uri, size, isUser, withPlusIcon, overlayColor }: IProfilePicProps) {
+export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overlayColor }: IProfilePicProps & INostrImg) {
 	const { color, highlight } = useThemeContext()
 	const [isErr, setIsErr] = useState(false)
 	const defaultSize = isUser ? 60 : 40
@@ -41,12 +36,8 @@ export default function ProfilePic({ uri, size, isUser, withPlusIcon, overlayCol
 			{isStr(uri) && uri?.length && !isErr ?
 				<Image
 					// https://docs.expo.dev/versions/latest/sdk/image/
-					onError={(_e => {
-						// l({ uri, err })
-						setIsErr(true)
-					})}
-					// TODO FIXME
-					// source={`${imgProxy(uri, circleStyle?.width ?? 40)}`}
+					onError={(_e => setIsErr(true))}
+					source={`${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`}
 					cachePolicy='memory-disk'
 					transition={200}
 					style={[
