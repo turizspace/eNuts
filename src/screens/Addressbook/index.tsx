@@ -45,7 +45,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	const { openPromptAutoClose } = usePromptContext()
 	const { color } = useThemeContext()
 	const {
-		// nutPub,
+		nutPub,
 		setNutPub,
 		pubKey,
 		setPubKey,
@@ -301,14 +301,12 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			<View style={styles.bookHeader}>
 				<ContactsCount count={contacts.length} />
 			</View>
-			{loading ?
+			{loading || (nutPub && !contacts.length) ?
 				<View style={styles.loadingWrap}>
 					<Loading />
 				</View>
 				:
 				<>
-					{/* user own profile */}
-					{/* {nutPub && userProfile && <UserProfile handlePress={handleContactPress} />} */}
 					{/* user contacts */}
 					{contacts.length > 0 ?
 						<View style={[
