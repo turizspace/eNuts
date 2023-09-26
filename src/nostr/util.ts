@@ -7,7 +7,7 @@ import { Event as NostrEvent } from 'nostr-tools'
  */
 export async function getRelays() {
 	const resp = await fetch('https://api.nostr.watch/v1/relays')
-	const relays = await resp.json() as Promise<string[]>
+	const relays = await resp.json<Promise<string[]>>()
 	return relays
 }
 

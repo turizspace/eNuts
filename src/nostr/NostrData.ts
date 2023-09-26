@@ -27,6 +27,8 @@ export interface INostrDataUser {
 	contacts: { list: string[]; createdAt: number }
 }
 export class NostrData {
+	public static cleanCache() { return new TTLCache('__ttlCacheProfiles__', 1000 * 60 * 60 * 24).clear() }
+	public cleanCache() { return this.#ttlCache.clear() }
 	get hex(): Readonly<string> { return this.#user.hex }
 	public getOneProfile(hex:string): Readonly<IProfileContent|undefined > { return this.#profiles[hex]?.profile }
 	get profiles(): Readonly<{ [k: string]: { profile: IProfileContent; createdAt: number } }> { return this.#profiles }
