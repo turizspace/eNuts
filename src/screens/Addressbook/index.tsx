@@ -148,10 +148,8 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		if (!ref?.current?.hex || hex !== ref.current.hex) {
 			ref.current = new NostrData(hex, {
 				onUserMetadataChanged: p => setUserProfile(p),
-				onContactsChanged: hexArr =>
-					setContacts(prev => prev?.length
-						? prev
-						: hexArr.map(x => ([x, undefined]))),
+				// note: creating a new state each event can cause wrong rendering of contacts metadata due to the flashlist viewport event?
+				onContactsChanged: hexArr => setContacts(hexArr.map(x => ([x, undefined]))),
 				onProfileChanged: profile => {
 					setContacts(prev => prev.map(x => x[0] === profile?.[0] ? profile : x))
 				},

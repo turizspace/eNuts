@@ -40,6 +40,7 @@ export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overl
 					source={`${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`}
 					cachePolicy='memory-disk'
 					transition={200}
+					contentFit='cover'
 					style={[
 						styles.circle,
 						styles.img,
@@ -76,7 +77,6 @@ const styles = StyleSheet.create({
 		zIndex: 2,
 	},
 	img: {
-		resizeMode: 'contain',
 		borderWidth: 0,
 	}
 })
