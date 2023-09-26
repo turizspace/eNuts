@@ -53,9 +53,8 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		setUserProfile,
 		userRelays,
 		setUserRelays,
-		contacts,
-		setContacts
 	} = useNostrContext()
+	const [contacts, setContacts] = useState<TContact[]>([])
 	const { loading, startLoading, stopLoading } = useLoading()
 	const [, setAlreadySeen] = useState<string[]>([])
 	const [newNpubModal, setNewNpubModal] = useState(false)
@@ -206,7 +205,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			return
 		}
 		if (!userProfile || !contact) {
-			openPromptAutoClose({msg: t('noProfile')})
+			openPromptAutoClose({ msg: t('noProfile') })
 			return
 		}
 		// navigate to user profile
@@ -300,7 +299,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			/>
 			{/* Header */}
 			<View style={styles.bookHeader}>
-				<ContactsCount />
+				<ContactsCount count={contacts.length} />
 			</View>
 			{loading ?
 				<View style={styles.loadingWrap}>
@@ -387,16 +386,16 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	)
 }
 
-function ContactsCount() {
+function ContactsCount({ count }: { count: number }) {
 	const { t } = useTranslation([NS.common])
 	const { color } = useThemeContext()
-	const { contacts, userRelays } = useNostrContext()
+	const { userRelays } = useNostrContext()
 	return (
 		<Text style={[styles.subHeader, { color: color.TEXT_SECONDARY }]}>
-			{!contacts.length ?
+			{!count ?
 				''
 				:
-				`${contacts.length > 1 ? t('contact_other', { count: contacts.length }) : t('contact_one', { count: contacts.length })} - ${userRelays.length || defaultRelays.length} Relays`
+				`${count > 1 ? t('contact_other', { count }) : t('contact_one', { count })} - ${userRelays.length || defaultRelays.length} Relays`
 			}
 		</Text>
 	)

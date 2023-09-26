@@ -1,5 +1,5 @@
 import { l } from '@log'
-import type { IProfileContent, TContact } from '@model/nostr'
+import type { IProfileContent } from '@model/nostr'
 import { store } from '@store'
 import { STORE_KEYS } from '@store/consts'
 import { getRedeemdedSigs } from '@store/nostrDms'
@@ -10,7 +10,6 @@ const useNostr = () => {
 	const [pubKey, setPubKey] = useState({ encoded: '', hex: '' })
 	const [userProfile, setUserProfile] = useState<IProfileContent | undefined>()
 	const [userRelays, setUserRelays] = useState<string[]>([])
-	const [contacts, setContacts] = useState<TContact[]>([])
 	const [claimedEvtIds, setClaimedEvtIds] = useState<string[]>([])
 
 	// init
@@ -40,8 +39,6 @@ const useNostr = () => {
 		setUserProfile,
 		userRelays,
 		setUserRelays,
-		contacts,
-		setContacts,
 		claimedEvtIds,
 		setClaimedEvtIds
 	}
@@ -68,8 +65,6 @@ const NostrContext = createContext<useNostrType>({
 	setUserProfile: () => l(''),
 	userRelays: [],
 	setUserRelays: () => l(''),
-	contacts: [],
-	setContacts: () => l(''),
 	claimedEvtIds: [],
 	setClaimedEvtIds: () => l(''),
 })
