@@ -12,28 +12,26 @@ import type { TAddressBookPageProps } from '@model/nav'
 import type { IProfileContent, TContact, TUserRelays } from '@model/nostr'
 import BottomNav from '@nav/BottomNav'
 import TopNav from '@nav/TopNav'
-import { relay } from '@nostr/class/Relay'
-import { defaultRelays, EventKind } from '@nostr/consts'
-import { filterFollows, getNostrUsername, parseProfileContent, parseUserRelays } from '@nostr/util'
+import { defaultRelays } from '@nostr/consts'
+import { getNostrUsername } from '@nostr/util'
 import { FlashList, type ViewToken } from '@shopify/flash-list'
-import Config from '@src/config'
 import { useNostrContext } from '@src/context/Nostr'
 import { usePromptContext } from '@src/context/Prompt'
 import { useThemeContext } from '@src/context/Theme'
 import { NS } from '@src/i18n'
-import { ttlCache } from '@src/storage/store/ttl'
+import { NostrData } from '@src/nostr/NostrData'
 import { secureStore, store } from '@store'
 import { SECRET, STORE_KEYS } from '@store/consts'
 import { getCustomMintNames } from '@store/mintStore'
 import { globals } from '@styles'
-import { getStrFromClipboard, openUrl } from '@util'
-import { type Event as NostrEvent, generatePrivateKey, getPublicKey, nip19 } from 'nostr-tools'
-import { useCallback, useEffect, useState } from 'react'
+import { getStrFromClipboard, openUrl, uniq } from '@util'
+import { generatePrivateKey, getPublicKey, nip19 } from 'nostr-tools'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 
 import ContactPreview from './ContactPreview'
-import UserProfile from './UserProfile'
+// import UserProfile from './UserProfile'
 
 /****************************************************************************/
 /* State issues will occur while debugging Android and IOS at the same time */
@@ -48,7 +46,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	const { openPromptAutoClose } = usePromptContext()
 	const { color } = useThemeContext()
 	const {
-		nutPub,
+		// nutPub,
 		setNutPub,
 		pubKey,
 		setPubKey,
@@ -62,82 +60,44 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	const { loading, startLoading, stopLoading } = useLoading()
 	const [, setAlreadySeen] = useState<string[]>([])
 	const [newNpubModal, setNewNpubModal] = useState(false)
-
+	const ref = useRef<NostrData>()
 	const isSending = route.params?.isMelt || route.params?.isSendEcash
+	
+	const initNostr = useCallback((hex: string) => {
+		if (!hex) { return l('no hex') }
+		if (!ref?.current?.hex || hex !== ref.current.hex) {
+			ref.current = new NostrData(hex, {
+				onUserMetadataChanged: p => setUserProfile(p),
+				onContactsChanged: hexArr =>
+					setContacts(prev => prev?.length
+						? prev
+						: hexArr.map(x => ([x, undefined]))),
+				onProfileChanged: profile => setContacts(prev => prev
+					.map(x => x[0] === profile?.[0] ? profile : x)),
+				userRelays
+			})
+		}
+		stopLoading()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
 
 	// gets user data from cache or relay
-	const initUserData = useCallback(({ hex, userRelays }: { hex: string, userRelays?: TUserRelays }) => {
+	const initUserData = useCallback((hex: string) => {
 		if (!hex || (userProfile && contacts.length)) {
 			l('no pubKey or user data already available')
 			stopLoading()
 			return
 		}
-		// TODO use cache if available
-		const sub = relay.subscribePool({
-			relayUrls: userRelays,
-			authors: [hex],
-			kinds: [EventKind.SetMetadata, EventKind.ContactList],
-			skipVerification: Config.skipVerification
-		})
-		let latestRelays = 0 	// createdAt
-		let latestProfile = 0	// createdAt
-		let latestContacts = 0 	// createdAt
-		stopLoading()
-		sub?.on('event', async (e: NostrEvent) => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-			if (+e.kind === EventKind.SetMetadata) {
-				// TODO save user metadata in cache
-				if (e.created_at > latestProfile) {
-					latestProfile = e.created_at
-					setUserProfile(parseProfileContent(e))
-				}
-			}
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-			if (+e.kind === EventKind.ContactList) {
-				// save user relays
-				if (!userRelays && e.created_at > latestRelays) {
-					// TODO user relays should be updated (every day?)
-					const relays = parseUserRelays<TUserRelays>(e.content)
-					latestRelays = e.created_at
-					await store.setObj(STORE_KEYS.relays, relays)
-				}
-				if (e.created_at > latestContacts) {
-					// TODO save contacts in cache
-					latestContacts = e.created_at
-					setContacts(prev => (filterFollows(e.tags).map(f => [f, prev[1]])).reverse() as unknown as TContact[])
-				}
-			}
-		})
+		initNostr(hex)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
 	// Gets metadata from cache or relay for contact in viewport
-	const setMetadata = useCallback(async (item: string) => {
-		if (item[1]) { return }
+	const setMetadata = useCallback((item: TContact) => {
+		if (item[0] && item[1]) { return }
 		const hex = item[0]
-		// TODO use cache if available
-		// TODO uncomment when cache is available
-		const e = await ttlCache.getObj<NostrEvent>(hex)
-		if (e) {
-			l('cache hit')
-			// events.map(e => [e.pubkey, parseProfileContent<IProfileContent>(e)]))
-			return setContacts(prev => prev.map(c => c[0] === hex ? [c[0], parseProfileContent<IProfileContent>(e)] : c))
-		}
-		l('cache miss')
-		const sub = relay.subscribePool({
-			relayUrls: userRelays,
-			authors: [hex],
-			kinds: [EventKind.SetMetadata],
-			skipVerification: Config.skipVerification
-		})
-		sub?.on('event', async (e: NostrEvent) => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-			if (+e.kind === EventKind.SetMetadata) {
-				// TODO uncomment when cache is available
-				await ttlCache.setObj(hex, e)
-				setContacts(prev => prev.map(c => c[0] === hex ? [c[0], parseProfileContent<IProfileContent>(e)] : c))
-			}
-		})
+		l({ itemInSetMetadata: item })
+		void ref?.current?.setupMetadataSub(hex)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
@@ -145,13 +105,11 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
 		setAlreadySeen(prev => {
 			for (let i = 0; i < viewableItems.length; i++) {
-				const visible = viewableItems[i]
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-				const seen = prev.some(itemSeen => visible.item[0] === itemSeen)
-				if (!seen) { void setMetadata(visible.item as string) }
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+				const { item }: { item: TContact } = viewableItems[i]
+				if (!prev.includes(item[0])) { void setMetadata(item) }
 			}
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			return [...prev, ...viewableItems.map(v => v.item[0] as string)]
+			return uniq([...prev, ...viewableItems.map((v: { item: TContact }) => v.item[0])])
 		})
 	}, [setMetadata])
 
@@ -236,13 +194,13 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		const sk = generatePrivateKey() // `sk` is a hex string
 		const pk = getPublicKey(sk)		// `pk` is a hex string
 		setNutPub(pk)
-		await Promise.all([
+		await Promise.allSettled([
 			store.set(STORE_KEYS.npub, pub.encoded), // save nostr encoded pubKey
 			store.set(STORE_KEYS.npubHex, pub.hex),	// save nostr hex pubKey
 			store.set(STORE_KEYS.nutpub, pk),			// save enuts hex pubKey
 			secureStore.set(SECRET, sk)					// save nostr secret generated by enuts for nostr DM interactions
 		])
-		initUserData({ hex: pub.hex })
+		initUserData(pub.hex)
 	}
 
 	const handleContactPress = ({ contact, npub, isUser }: { contact?: IProfileContent, npub?: string, isUser?: boolean }) => {
@@ -312,17 +270,22 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 
 	// check if user has nostr data saved previously
 	useEffect(() => {
+		startLoading()
 		void (async () => {
-			startLoading()
-			const data = await Promise.all([
+			const [storedNPub, storedPubKeyHex, stroedUserRelays] = await Promise.all([
 				store.get(STORE_KEYS.npub),
 				store.get(STORE_KEYS.npubHex),
 				store.getObj<TUserRelays>(STORE_KEYS.relays),
 			])
-			setPubKey({ encoded: data[0] || '', hex: data[1] || '' })
-			setUserRelays(data[2] || [])
-			initUserData({ hex: data[1] || '', userRelays: data[2] || [] })
-			if (!data[0]) { setNewNpubModal(true) }
+			if (!storedNPub) { setNewNpubModal(true) }
+			l({ storedPubKeyHex })
+			if (!storedPubKeyHex) {
+				stopLoading()
+				return
+			}
+			initNostr(storedPubKeyHex)
+			setPubKey({ encoded: storedNPub || '', hex: storedPubKeyHex || '' })
+			if (stroedUserRelays?.length) { setUserRelays(stroedUserRelays) }
 			stopLoading()
 		})()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -333,7 +296,12 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			<TopNav
 				screenName={route.params?.isMelt ? t('cashOut') : t('addressBook', { ns: NS.topNav })}
 				withBackBtn={isSending}
-				handlePress={() => isSending ? navigation.goBack() : navigation.navigate('qr scan', {})}
+				nostrProfile={userProfile?.picture}
+				handlePress={() => isSending ? navigation.goBack() : navigation.navigate('Contact', {
+					contact: userProfile,
+					npub: pubKey.encoded,
+					isUser: true
+				})}
 			/>
 			{/* Header */}
 			<View style={styles.bookHeader}>
@@ -346,7 +314,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 				:
 				<>
 					{/* user own profile */}
-					{nutPub && userProfile && <UserProfile handlePress={handleContactPress} />}
+					{/* {nutPub && userProfile && <UserProfile handlePress={handleContactPress} />} */}
 					{/* user contacts */}
 					{contacts.length > 0 ?
 						<View style={[
@@ -356,7 +324,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 						]}>
 							<FlashList
 								data={contacts}
-								estimatedItemSize={300}
+								estimatedItemSize={70}
 								viewabilityConfig={{
 									minimumViewTime: 250,
 									itemVisiblePercentThreshold: 10,
@@ -455,7 +423,7 @@ const styles = StyleSheet.create({
 		marginTop: 100,
 	},
 	subHeader: {
-		fontSize: 16,
+		fontSize: 14,
 		fontWeight: '500',
 	},
 	cancel: {
@@ -467,7 +435,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 0,
 	},
 	contactSeparator: {
-		marginLeft: 60,
+		marginLeft: 80,
 		marginVertical: 10,
 		marginRight: 20,
 	},
