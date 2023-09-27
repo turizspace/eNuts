@@ -13,7 +13,7 @@ export default function ProfileBanner({ hex, uri }: { hex: HexKey, uri?: string 
 				<Image
 					onError={(_e => setIsErr(true))}
 					source={`${imgProxy(hex, uri, Dimensions.get('window').width, 'banner', 600)}`}
-					cachePolicy='memory-disk'
+					cachePolicy='disk'
 					transition={200}
 					contentFit='cover'
 					style={styles.banner}
@@ -22,6 +22,7 @@ export default function ProfileBanner({ hex, uri }: { hex: HexKey, uri?: string 
 				<Image
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					source={require('@assets/mixed_forest.png')}
+					contentFit='cover'
 					style={styles.defaultBanner}
 				/>
 			}
@@ -44,7 +45,6 @@ const styles = StyleSheet.create({
 	defaultBanner: {
 		width: undefined,
 		height: 250,
-		resizeMode: 'cover',
 		opacity: .4,
 		marginTop: -100
 	}

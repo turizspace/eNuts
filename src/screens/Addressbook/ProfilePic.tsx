@@ -38,7 +38,7 @@ export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overl
 					// https://docs.expo.dev/versions/latest/sdk/image/
 					onError={(_e => setIsErr(true))}
 					source={`${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`}
-					cachePolicy='memory-disk'
+					cachePolicy='disk'
 					transition={200}
 					contentFit='cover'
 					style={[
