@@ -27,6 +27,7 @@ import { StatusBar } from 'expo-status-bar'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState } from 'react-native'
+import { MenuProvider } from 'react-native-popup-menu'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import * as Sentry from 'sentry-expo'
 
@@ -196,27 +197,29 @@ function _App() {
 	return (
 		<ThemeProvider>
 			<PinCtx.Provider value={pinData}>
-				<PrivacyProvider>
-					<NostrProvider>
-						<NavContainer>
-							<FocusClaimProvider >
-								<PromptProvider>
-									<KeyboardProvider>
-										<Navigator
-											shouldOnboard={shouldOnboard}
-											pinHash={auth.pinHash}
-											bgAuth={bgAuth}
-											setBgAuth={setBgAuth}
-										/>
-										<StatusBar style="auto" />
-										<ClipboardModal />
-										<Toaster />
-									</KeyboardProvider>
-								</PromptProvider>
-							</FocusClaimProvider>
-						</NavContainer>
-					</NostrProvider>
-				</PrivacyProvider>
+				<MenuProvider>
+					<PrivacyProvider>
+						<NostrProvider>
+							<NavContainer>
+								<FocusClaimProvider >
+									<PromptProvider>
+										<KeyboardProvider>
+											<Navigator
+												shouldOnboard={shouldOnboard}
+												pinHash={auth.pinHash}
+												bgAuth={bgAuth}
+												setBgAuth={setBgAuth}
+											/>
+											<StatusBar style="auto" />
+											<ClipboardModal />
+											<Toaster />
+										</KeyboardProvider>
+									</PromptProvider>
+								</FocusClaimProvider>
+							</NavContainer>
+						</NostrProvider>
+					</PrivacyProvider>
+				</MenuProvider>
 			</PinCtx.Provider>
 		</ThemeProvider>
 	)

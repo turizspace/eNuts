@@ -1,13 +1,20 @@
-import { ChevronRightIcon } from '@comps/Icons'
+import { ChevronRightIcon, MenuDotsIcon, UserIcon } from '@comps/Icons'
+import Separator from '@comps/Separator'
 import Txt from '@comps/Txt'
 import type { IProfileContent, TContact } from '@model/nostr'
 import { truncateNostrProfileInfo, truncateNpub } from '@nostr/util'
 import { useThemeContext } from '@src/context/Theme'
-import { NS } from '@src/i18n'
-import { highlight as hi, mainColors } from '@styles'
+// import { NS } from '@src/i18n'
+import { highlight as hi } from '@styles'
 import { nip19 } from 'nostr-tools'
-import { useTranslation } from 'react-i18next'
+// import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import {
+	Menu,
+	MenuOption,
+	MenuOptions,
+	MenuTrigger,
+} from 'react-native-popup-menu'
 
 import ProfilePic from './ProfilePic'
 import Username from './Username'
@@ -20,7 +27,7 @@ interface IContactPreviewProps {
 }
 
 export default function ContactPreview({ contact, handleContactPress, handleSend, isPayment }: IContactPreviewProps) {
-	const { t } = useTranslation([NS.common])
+	// const { t } = useTranslation([NS.common])
 	const { color, highlight } = useThemeContext()
 
 	return (
@@ -49,7 +56,7 @@ export default function ContactPreview({ contact, handleContactPress, handleSend
 					overlayColor={color.INPUT_BG}
 				/>
 				{contact[1] ?
-					<View>
+					<View style={styles.nameWrap}>
 						<Username
 							displayName={contact[1].displayName}
 							display_name={contact[1].display_name}
@@ -73,12 +80,41 @@ export default function ContactPreview({ contact, handleContactPress, handleSend
 				<ChevronRightIcon width={16} height={16} color={color.TEXT} />
 				:
 				!isPayment && contact[1] ?
-					<TouchableOpacity
-						style={[styles.sendEcashBtn, { backgroundColor: hi[highlight] }]}
-						onPress={handleSend}
-					>
-						<Txt txt={t('send')} styles={[styles.sendTxt]} />
-					</TouchableOpacity>
+					<Menu>
+						<MenuTrigger>
+							<MenuDotsIcon color={color.TEXT} />
+						</MenuTrigger>
+						<MenuOptions
+							customStyles={{
+								optionsContainer: {
+									backgroundColor: color.INPUT_BG,
+									borderRadius: 10,
+								},
+							}}
+						>
+							<MenuOption onSelect={() => alert('Favorite')} >
+								<View style={styles.optWrap}>
+									<Txt txt='Favorite' />
+									<UserIcon width={18} height={18} color={color.TEXT} />
+								</View>
+							</MenuOption>
+							<Separator />
+							<MenuOption onSelect={handleContactPress} >
+								<View style={styles.optWrap}>
+									<Txt txt='See profile' />
+									<UserIcon width={18} height={18} color={color.TEXT} />
+								</View>
+							</MenuOption>
+							<Separator />
+							<MenuOption onSelect={() => alert('Copy npub')} >
+								<View style={styles.optWrap}>
+									<Txt txt='Copy npub' />
+									<UserIcon width={18} height={18} color={color.TEXT} />
+								</View>
+							</MenuOption>
+							{/* <MenuOption onSelect={() => alert('Not called')} disabled text='Disabled' /> */}
+						</MenuOptions>
+					</Menu>
 					:
 					null
 			}
@@ -98,13 +134,12 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		width: '70%'
 	},
-	sendEcashBtn: {
-		paddingHorizontal: 10,
-		paddingVertical: 5,
-		borderRadius: 50,
+	nameWrap: {
+		width: '100%'
 	},
-	sendTxt: {
-		color: mainColors.WHITE,
-		fontWeight: '500'
-	}
+	optWrap: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		padding: 10
+	},
 })

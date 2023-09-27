@@ -16,6 +16,8 @@ export function preventBack(e: TBeforeRemoveEvent, dispatch: (action: any) => vo
 		(e.data.action.payload && 'name' in e.data.action.payload && e.data.action.payload.name === 'auth')
 		||
 		(e.data.action.payload && 'name' in e.data.action.payload && e.data.action.payload.name === 'qr scan')
+		||
+		(e.data.action.payload && 'name' in e.data.action.payload && e.data.action.payload.name === 'Security settings')
 	) {
 		dispatch(e.data.action)
 	}
