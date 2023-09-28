@@ -9,7 +9,7 @@ import type { Event as NostrEvent } from 'nostr-tools'
 
 import { relay } from './class/Relay'
 import { defaultRelays, EventKind } from './consts'
-import { filterFollows, parseProfileContent, parseUserRelays } from './util'
+import { filterFollows, isHex, parseProfileContent, parseUserRelays } from './util'
 
 export interface IOnProfileChangedHandler {
 	(profile: [string, IProfileContent]): void
@@ -41,6 +41,7 @@ export class NostrData {
 	#profiles: { [k: string]: { profile: IProfileContent; createdAt: number } } = {}
 	#userRelays: string[] = []
 	#user: INostrDataUser
+	#metadataSubs: { [k: string]: boolean } = {}
 	constructor(
 		userHex: string,
 		{
@@ -76,10 +77,10 @@ export class NostrData {
 					if (!isArr(acc?.read)) { acc.read = [] }
 					if (!isArr(acc?.write)) { acc.write = [] }
 					const [, relay, type] = cur
-					if (type === 'read') {
-						if (!acc.read.includes(relay)) { acc.read.push(relay) }
-					} else if (type === 'write') {
-						if (!acc.write.includes(relay)) { acc.write.push(relay) }
+					if (type === 'read' && !acc.read.includes(relay)) {
+						acc.read.push(relay)
+					} else if (type === 'write' && !acc.write.includes(relay)) {
+						acc.write.push(relay)
 					} else {
 						if (!acc.read.includes(relay)) { acc.read.push(relay) }
 						if (!acc.write.includes(relay)) { acc.write.push(relay) }
@@ -192,7 +193,7 @@ export class NostrData {
 		})
 	}
 	public async setupMetadataSub(hex: string) {
-		if (!hex || this.#profiles[hex]?.profile) { return }
+		if (!hex || !isHex(hex) || this.#profiles[hex]?.profile || this.#metadataSubs[hex]) { return }
 		const e = await this.#ttlCache.getObj<{ profile: IProfileContent; createdAt: number }>(hex)
 		if (e) {
 			l('cache hit')
@@ -212,6 +213,11 @@ export class NostrData {
 			kinds: [EventKind.Metadata],
 			skipVerification: Config.skipVerification,
 		})
+		this.#metadataSubs[hex] = true
+		sub?.on('eose', () => {
+			this.#metadataSubs[hex] = false
+			delete this.#metadataSubs[hex]
+		})
 		sub?.on('event', (e: NostrEvent) => {
 			if (+e.kind !== EventKind.Metadata) { return }
 			const p = this.#profiles[hex]
@@ -229,6 +235,7 @@ export class NostrData {
 		})
 	}
 	public setupMetadataSub2(hex: string[]) {
+		hex = hex.filter(x => isHex(hex) && !this.#metadataSubs[x])
 		if (!hex?.length || hex.every(x => this.#profiles[x]?.profile)) { return }
 		/* const e = await this.#ttlCache.getObj<{ profile: IProfileContent; createdAt: number }>(hex)
 		if (e) {
@@ -248,6 +255,13 @@ export class NostrData {
 			authors: hex,
 			kinds: [EventKind.Metadata],
 			skipVerification: Config.skipVerification,
+		})
+		hex.forEach(h => this.#metadataSubs[h] = true)
+		sub?.on('eose', () => {
+			hex.forEach(h => {
+				this.#metadataSubs[h] = false
+				delete this.#metadataSubs[h]
+			})
 		})
 		sub?.on('event', (e: NostrEvent) => {
 			if (+e.kind !== EventKind.Metadata) { return }

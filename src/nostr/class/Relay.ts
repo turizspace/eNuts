@@ -21,20 +21,20 @@ interface IEventDM {
 class Relay {
 
 	#pool?: SimplePool
-	#sub? :Sub<number>
+	#sub?: Sub<number>
 	#poolSubs = 0
 	#poolEventsReceived: number = 0
-	#relays:string[]=[]
+	#relays: string[] = []
 
 	constructor() { }
-	subscribePool({ relayUrls, authors, kinds, skipVerification,...conf }: IPoolSubProps) {
+	subscribePool({ relayUrls, authors, kinds, skipVerification, ...conf }: IPoolSubProps) {
 		try {
 			if (!this.#pool) { this.#connectPool() }
 			const relays = relayUrls?.length ? relayUrls : defaultRelays
-			this.#relays=[...(this.#relays||[]),...(relayUrls||[]),...(defaultRelays||[])]
+			this.#relays = [...(this.#relays || []), ...(relayUrls || []), ...(defaultRelays || [])]
 			const sub = this.#pool?.sub(
 				relays,
-				[{ authors, kinds,...conf }],
+				[{ authors, kinds, ...conf }],
 				{ skipVerification }
 			)
 			this.#sub = sub
@@ -56,8 +56,8 @@ class Relay {
 		const validated = this.#validate(event, sk)
 		if (!validated) { return }
 		try {
-			this.#relays=[...(this.#relays||[]),...(relayUrls||[]),...(defaultRelays||[])]
-			const res = await Promise.allSettled(this.#pool?.publish([...relayUrls || [], ...defaultRelays], validated)??[])
+			this.#relays = [...(this.#relays || []), ...(relayUrls || []), ...(defaultRelays || [])]
+			const res = await Promise.allSettled(this.#pool?.publish([...relayUrls || [], ...defaultRelays], validated) ?? [])
 			l({ res })
 			return true
 		} catch (e) {
@@ -66,11 +66,11 @@ class Relay {
 		}
 	}
 	closePoolConnection(relayUrls: string[]) {
-		this.#pool?.close([...(this.#relays||[]),...(relayUrls||[]),...(defaultRelays||[])])
+		this.#pool?.close([...(this.#relays || []), ...(relayUrls || []), ...(defaultRelays || [])])
 	}
 
-	#connectPool(opts:ConstructorParameters<typeof SimplePool>[0]={}) {
-		if(this.#pool?.close){this.#pool.close([...(this.#relays||[]),...(defaultRelays||[])])}
+	#connectPool(opts: ConstructorParameters<typeof SimplePool>[0] = {}) {
+		if (this.#pool?.close) { this.#pool.close([...(this.#relays || []), ...(defaultRelays || [])]) }
 		this.#pool = new SimplePool(opts)
 	}
 
