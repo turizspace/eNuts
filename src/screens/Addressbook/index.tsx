@@ -13,7 +13,7 @@ import type { IProfileContent, TContact, TUserRelays } from '@model/nostr'
 import BottomNav from '@nav/BottomNav'
 import TopNav from '@nav/TopNav'
 import { defaultRelays } from '@nostr/consts'
-import { getNostrUsername } from '@nostr/util'
+import { getNostrUsername, isHex, isNpub } from '@nostr/util'
 import { FlashList, type ViewToken } from '@shopify/flash-list'
 import { useNostrContext } from '@src/context/Nostr'
 import { usePromptContext } from '@src/context/Prompt'
@@ -101,7 +101,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		}
 		let pub = { encoded: '', hex: '' }
 		// check if is npub
-		if (clipboard.startsWith('npub')) {
+		if (isNpub(clipboard)) {
 			pub = { encoded: clipboard, hex: nip19.decode(clipboard).data as string || '' }
 			setPubKey(pub)
 			// start initialization of nostr data
@@ -109,9 +109,11 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			return
 		}
 		try {
-			const encoded = nip19.npubEncode(clipboard)
-			pub = { encoded, hex: clipboard }
-			setPubKey(pub)
+			if (isHex(clipboard)) {
+				const encoded = nip19.npubEncode(clipboard)
+				pub = { encoded, hex: clipboard }
+				setPubKey(pub)
+			}
 		} catch (e) {
 			openPromptAutoClose({ msg: t('invalidPubKey') })
 			stopLoading()

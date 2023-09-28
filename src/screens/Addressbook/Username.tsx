@@ -1,5 +1,5 @@
 import Txt from '@comps/Txt'
-import type { HexKey } from '@model/nostr'
+import type { HexKey, Npub } from '@model/nostr'
 import { truncateNostrProfileInfo, truncateNpub } from '@nostr/util'
 import { StyleSheet } from 'react-native'
 
@@ -8,7 +8,7 @@ interface IUsernameProps {
 	display_name?: string,
 	username?: string,
 	name?: string
-	npub: HexKey
+	npub: Npub
 	fontSize?: number
 }
 

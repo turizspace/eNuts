@@ -1,4 +1,4 @@
-import type { IProfileContent } from '@model/nostr'
+import type { IProfileContent, Npub } from '@model/nostr'
 import { cTo } from '@store/utils'
 import { Event as NostrEvent } from 'nostr-tools'
 
@@ -90,6 +90,6 @@ export function getNostrUsername(contact?: IProfileContent) {
 export function isHex(s: unknown) {
 	return typeof s === 'string' && s.length === 64 && /[0-9a-fA-F]{64}/.test(s)
 }
-export function isNpub(s: unknown): s is `npub1${string}` {
+export function isNpub(s: unknown): s is Npub {
 	return typeof s === 'string' && s.length === 63 && /npub1[023456789acdefghjklmnpqrstuvwxyz]{58}/.test(s)
 }
