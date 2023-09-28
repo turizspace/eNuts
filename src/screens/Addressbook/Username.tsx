@@ -1,5 +1,5 @@
 import Txt from '@comps/Txt'
-import type { HexKey, Npub } from '@model/nostr'
+import type { Npub } from '@model/nostr'
 import { truncateNostrProfileInfo, truncateNpub } from '@nostr/util'
 import { StyleSheet } from 'react-native'
 

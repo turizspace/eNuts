@@ -102,7 +102,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		let pub = { encoded: '', hex: '' }
 		// check if is npub
 		if (isNpub(clipboard)) {
-			pub = { encoded: clipboard, hex: nip19.decode(clipboard).data as string || '' }
+			pub = { encoded: clipboard, hex: nip19.decode(clipboard).data  || '' }
 			setPubKey(pub)
 			// start initialization of nostr data
 			await handleNewNpub(pub)

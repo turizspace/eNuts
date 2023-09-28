@@ -228,7 +228,7 @@ export class NostrData {
 			}
 		})
 	}
-	public async setupMetadataSub2(hex: string[]) {
+	public setupMetadataSub2(hex: string[]) {
 		if (!hex?.length || hex.every(x => this.#profiles[x]?.profile)) { return }
 		/* const e = await this.#ttlCache.getObj<{ profile: IProfileContent; createdAt: number }>(hex)
 		if (e) {
