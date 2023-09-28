@@ -20,6 +20,8 @@ export const STORE_KEYS = {
 	hiddenTxs: 'privacy_txs',
 	latestHistory: 'history_latest',
 	createdToken: 'createdToken',
+	favs: 'nostr_favs',
+	recent: 'nostr_recent',
 }
 
 export const SECURESTORE_KEY = 'auth_pin'

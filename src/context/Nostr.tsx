@@ -1,5 +1,5 @@
 import { l } from '@log'
-import type { IProfileContent } from '@model/nostr'
+import type { IProfileContent, TContact } from '@model/nostr'
 import { store } from '@store'
 import { STORE_KEYS } from '@store/consts'
 import { getRedeemdedSigs } from '@store/nostrDms'
@@ -10,20 +10,26 @@ const useNostr = () => {
 	const [pubKey, setPubKey] = useState({ encoded: '', hex: '' })
 	const [userProfile, setUserProfile] = useState<IProfileContent | undefined>()
 	const [userRelays, setUserRelays] = useState<string[]>([])
+	const [favs, setFavs] = useState<string[]>([])
+	const [recent, setRecent] = useState<TContact[]>([])
 	const [claimedEvtIds, setClaimedEvtIds] = useState<string[]>([])
 
 	// init
 	useEffect(() => {
 		void (async () => {
 			try {
-				const [nutpub, redeemed] = await Promise.all([
+				const [nutpub, redeemed, nostrFavs, nostrRecent] = await Promise.all([
 					// user enuts pubKey
 					store.get(STORE_KEYS.nutpub),
 					// already claimed ecash from DM: stored event signatures
 					getRedeemdedSigs(),
+					store.getObj<string[]>(STORE_KEYS.favs),
+					store.getObj<TContact[]>(STORE_KEYS.recent),
 				])
 				setNutPub(nutpub || '')
 				setClaimedEvtIds(redeemed)
+				setFavs(nostrFavs || [])
+				setRecent(nostrRecent || [])
 			} catch (e) {
 				l(e)
 			}
@@ -39,6 +45,10 @@ const useNostr = () => {
 		setUserProfile,
 		userRelays,
 		setUserRelays,
+		recent,
+		setRecent,
+		favs,
+		setFavs,
 		claimedEvtIds,
 		setClaimedEvtIds
 	}
@@ -65,6 +75,10 @@ const NostrContext = createContext<useNostrType>({
 	setUserProfile: () => l(''),
 	userRelays: [],
 	setUserRelays: () => l(''),
+	recent: [],
+	setRecent: () => l(''),
+	favs: [],
+	setFavs: () => l(''),
 	claimedEvtIds: [],
 	setClaimedEvtIds: () => l(''),
 })

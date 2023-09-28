@@ -1,9 +1,9 @@
 import Copy from '@comps/Copy'
+import { LeftArrow } from '@comps/Icons'
 import LeaveAppModal from '@comps/LeaveAppModal'
 import Txt from '@comps/Txt'
 import { getMintsBalances } from '@db'
 import type { IContactPageProps } from '@model/nav'
-import TopNav from '@nav/TopNav'
 import { getNostrUsername, truncateNpub } from '@nostr/util'
 import { useNostrContext } from '@src/context/Nostr'
 import { usePromptContext } from '@src/context/Prompt'
@@ -73,63 +73,62 @@ export default function ContactPage({ navigation, route }: IContactPageProps) {
 
 	return (
 		<View style={[globals(color).container, styles.container]}>
-			<TopNav
-				withBackBtn
-				screenName={isUser ? t('yourProfile') : getNostrUsername(contact)}
-				handlePress={() => navigation.goBack()}
-			/>
+			<TouchableOpacity
+				style={styles.backBtn}
+				onPress={() => navigation.goBack()}
+			>
+				<LeftArrow color={mainColors.WHITE} />
+			</TouchableOpacity>
 			{/* Contact pictures overview */}
-			<View style={{ zIndex: 5 }}>
-				<ProfileBanner hex={npub} uri={contact?.banner} />
-				<View style={styles.profilePicContainer}>
-					<View style={{ width: 100, height: 100, borderRadius: 50, overflow: 'hidden' }}>
-						<ProfilePic
-							hex={npub}
-							uri={contact?.picture}
-							size={100}
-							isUser={isUser}
-						/>
-					</View>
-					{!isUser &&
-						<TouchableOpacity
-							style={[styles.sendEcash, { backgroundColor: hi[highlight] }]}
-							onPress={() => void handleSend()}
-						>
-							<Txt txt='Send Ecash' styles={[{ fontWeight: '500', color: mainColors.WHITE }]} />
-						</TouchableOpacity>
-					}
-				</View>
-				<View style={styles.contentWrap}>
-					{/* username */}
-					<Username
-						displayName={contact?.displayName}
-						display_name={contact?.display_name}
-						username={contact?.username}
-						name={contact?.name}
-						npub={npub}
-						fontSize={24}
+			<ProfileBanner hex={npub} uri={contact?.banner} />
+			<View style={styles.profilePicContainer}>
+				<View style={{ width: 100, height: 100, borderRadius: 50, overflow: 'hidden' }}>
+					<ProfilePic
+						hex={npub}
+						uri={contact?.picture}
+						size={100}
+						isUser={isUser}
 					/>
-					{/* npub */}
-
-					<View style={styles.npubWrap}>
-						<Txt
-							// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-							txt={`${isUser ? t('enutsPub', { ns: NS.common }) : ''}${truncateNpub(isUser ? pubKey.encoded : npub)}`}
-							styles={[styles.npub, { color: color.TEXT_SECONDARY }]}
-						/>
-						<Copy txt={isUser ? pubKey.encoded : npub} />
-					</View>
-					{/* tags */}
-					<View style={styles.tagsWrap}>
-						<NIP05Verified nip05={contact?.nip05} onPress={handlePress} />
-						<Website website={contact?.website} onPress={handlePress} />
-						<Lud lud16={contact?.lud16} lud06={contact?.lud06} onPress={handlePress} />
-					</View>
-					{/* about */}
-					{contact?.about && contact.about.length > 0 &&
-						<Txt txt={contact.about} styles={[styles.about]} />
-					}
 				</View>
+				{!isUser &&
+					<TouchableOpacity
+						style={[styles.sendEcash, { backgroundColor: hi[highlight] }]}
+						onPress={() => void handleSend()}
+					>
+						<Txt txt='Send Ecash' styles={[{ fontWeight: '500', color: mainColors.WHITE }]} />
+					</TouchableOpacity>
+				}
+			</View>
+			<View style={styles.contentWrap}>
+				{/* username */}
+				<Username
+					displayName={contact?.displayName}
+					display_name={contact?.display_name}
+					username={contact?.username}
+					name={contact?.name}
+					npub={npub}
+					fontSize={24}
+				/>
+				{/* npub */}
+
+				<View style={styles.npubWrap}>
+					<Txt
+						// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+						txt={`${isUser ? t('enutsPub', { ns: NS.common }) : ''}${truncateNpub(isUser ? pubKey.encoded : npub)}`}
+						styles={[styles.npub, { color: color.TEXT_SECONDARY }]}
+					/>
+					<Copy txt={isUser ? pubKey.encoded : npub} />
+				</View>
+				{/* tags */}
+				<View style={styles.tagsWrap}>
+					<NIP05Verified nip05={contact?.nip05} onPress={handlePress} />
+					<Website website={contact?.website} onPress={handlePress} />
+					<Lud lud16={contact?.lud16} lud06={contact?.lud06} onPress={handlePress} />
+				</View>
+				{/* about */}
+				{contact?.about && contact.about.length > 0 &&
+					<Txt txt={contact.about} styles={[styles.about]} />
+				}
 			</View>
 			<LeaveAppModal url={url} visible={visible} closeModal={closeModal} />
 		</View >
@@ -138,7 +137,20 @@ export default function ContactPage({ navigation, route }: IContactPageProps) {
 
 const styles = StyleSheet.create({
 	container: {
-		paddingTop: 100
+		paddingTop: 0
+	},
+	backBtn: {
+		backgroundColor: 'rgba(0, 0, 0, .4)',
+		position: 'absolute',
+		top: 50,
+		left: 20,
+		zIndex: 1,
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center'
 	},
 	profilePicContainer: {
 		flexDirection: 'row',

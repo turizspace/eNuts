@@ -12,7 +12,6 @@ import type { TAddressBookPageProps } from '@model/nav'
 import type { IProfileContent, TContact, TUserRelays } from '@model/nostr'
 import BottomNav from '@nav/BottomNav'
 import TopNav from '@nav/TopNav'
-import { defaultRelays } from '@nostr/consts'
 import { getNostrUsername } from '@nostr/util'
 import { FlashList, type ViewToken } from '@shopify/flash-list'
 import { useNostrContext } from '@src/context/Nostr'
@@ -28,9 +27,11 @@ import { getStrFromClipboard, openUrl, uniq } from '@util'
 import { generatePrivateKey, getPublicKey, nip19 } from 'nostr-tools'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import ContactPreview from './ContactPreview'
+import ProfilePic from './ProfilePic'
+// import TxtInput from '@comps/TxtInput'
 
 /****************************************************************************/
 /* State issues will occur while debugging Android and IOS at the same time */
@@ -53,6 +54,8 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		setUserProfile,
 		userRelays,
 		setUserRelays,
+		recent,
+		favs,
 	} = useNostrContext()
 	const [contacts, setContacts] = useState<TContact[]>([])
 	const { loading, startLoading, stopLoading } = useLoading()
@@ -148,7 +151,20 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			ref.current = new NostrData(hex, {
 				onUserMetadataChanged: p => setUserProfile(p),
 				// note: creating a new state each event can cause wrong rendering of contacts metadata due to the flashlist viewport event?
-				onContactsChanged: hexArr => setContacts(hexArr.map(x => ([x, undefined]))),
+				onContactsChanged: hexArr => {
+					setContacts(hexArr
+						.sort((a, b) => {
+							const aIsFav = favs.includes(a)
+							const bIsFav = favs.includes(b)
+							// a comes before b (a is a favorite)
+							if (aIsFav && !bIsFav) { return -1 }
+							// b comes before a (b is a favorite)
+							if (!aIsFav && bIsFav) { return 1 }
+							return 0
+						})
+						.map(x => [x, undefined])
+					)
+				},
 				onProfileChanged: profile => {
 					setContacts(prev => prev.map(x => x[0] === profile?.[0] ? profile : x))
 				},
@@ -297,46 +313,72 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 					isUser: true
 				})}
 			/>
-			{/* Header */}
-			<View style={styles.bookHeader}>
-				<ContactsCount count={contacts.length} />
-			</View>
 			{loading || (nutPub && !contacts.length) ?
-				<View style={styles.loadingWrap}>
-					<Loading />
-				</View>
+				<View style={styles.loadingWrap}><Loading /></View>
 				:
 				<>
+					{/* user recently used */}
+					{recent.length > 0 &&
+						<FlashList
+							data={recent}
+							horizontal
+							estimatedItemSize={50}
+							keyExtractor={item => item[0]}
+							renderItem={({ item }) => (
+								<TouchableOpacity onPress={() => void handleSend({
+									npub: nip19.npubEncode(item[0]),
+									name: getNostrUsername(item[1])
+								})}>
+									<ProfilePic
+										hex={item[0]}
+										size={50}
+										uri={item[1]?.picture}
+										overlayColor={color.INPUT_BG}
+										isVerified={!!item[1]?.nip05?.length}
+										isFav={favs.includes(item[0])}
+									/>
+								</TouchableOpacity>
+							)}
+						/>
+					}
+					{/* // TODO open search bar on demand & search contacts */}
+					{/* <View style={{ paddingHorizontal: 20 }}>
+						<TxtInput
+							placeholder='Search contacts' // TODO translate
+							onChangeText={text => l(text)}
+							onSubmitEditing={() => l('search')}
+						/>
+					</View> */}
 					{/* user contacts */}
 					{contacts.length > 0 ?
 						<View style={[
-							globals(color).wrapContainer,
 							styles.contactsWrap,
 							{ marginBottom: route.params?.isMelt || route.params?.isSendEcash ? marginBottomPayment : marginBottom }
 						]}>
 							<FlashList
 								data={contacts}
 								estimatedItemSize={70}
-								viewabilityConfig={{
-									minimumViewTime: 500,
-									itemVisiblePercentThreshold: 10,
-								}}
+								viewabilityConfig={{ minimumViewTime: 500, itemVisiblePercentThreshold: 10 }}
 								onViewableItemsChanged={onViewableItemsChanged}
 								keyExtractor={item => item[0]}
 								renderItem={({ item }) => (
 									<ContactPreview
+										hex={item[0]}
 										contact={item}
-										handleContactPress={() => handleContactPress({ contact: item[1], npub: nip19.npubEncode(item[0]) })}
-										handleSend={() => {
-											void handleSend({
-												npub: item[0],
-												name: getNostrUsername(item[1])
-											})
-										}}
+										handleContactPress={() => (
+											handleContactPress({ contact: item[1], npub: nip19.npubEncode(item[0]) })
+										)}
+										handleSend={() => void handleSend({
+											npub: item[0],
+											name: getNostrUsername(item[1])
+										})}
 										isPayment={route.params?.isMelt || route.params?.isSendEcash}
+										isFav={favs.includes(item[0])}
 									/>
 								)}
-								ItemSeparatorComponent={() => <Separator style={[styles.contactSeparator]} />}
+								ItemSeparatorComponent={() => (
+									<Separator style={[styles.contactSeparator, { borderColor: color.DARK_BORDER }]} />
+								)}
 							/>
 						</View>
 						:
@@ -382,24 +424,9 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	)
 }
 
-function ContactsCount({ count }: { count: number }) {
-	const { t } = useTranslation([NS.common])
-	const { color } = useThemeContext()
-	const { userRelays } = useNostrContext()
-	return (
-		<Text style={[styles.subHeader, { color: color.TEXT_SECONDARY }]}>
-			{!count ?
-				''
-				:
-				`${count > 1 ? t('contact_other', { count }) : t('contact_one', { count })} - ${userRelays.length || defaultRelays.length} Relays`
-			}
-		</Text>
-	)
-}
-
 const styles = StyleSheet.create({
 	container: {
-		paddingTop: 0
+		paddingTop: 100
 	},
 	loadingWrap: {
 		flex: 1,
@@ -407,26 +434,15 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		marginBottom: 100,
 	},
-	bookHeader: {
-		paddingHorizontal: 20,
-		marginBottom: 20,
-		marginTop: 100,
-	},
-	subHeader: {
-		fontSize: 14,
-		fontWeight: '500',
-	},
 	cancel: {
 		marginTop: 25,
 		marginBottom: 10
 	},
 	contactsWrap: {
 		flex: 1,
-		paddingHorizontal: 0,
 	},
 	contactSeparator: {
-		marginLeft: 80,
+		marginHorizontal: 20,
 		marginVertical: -10,
-		marginRight: 20,
 	},
 })

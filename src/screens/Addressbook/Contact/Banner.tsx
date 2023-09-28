@@ -38,13 +38,13 @@ const styles = StyleSheet.create({
 	},
 	banner: {
 		width: '100%',
-		height: 140,
+		height: 200,
 		opacity: 1,
-		marginTop: 10
+		// marginTop: 10
 	},
 	defaultBanner: {
 		width: undefined,
-		height: 250,
+		height: 350,
 		opacity: .4,
 		marginTop: -100
 	}

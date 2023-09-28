@@ -1,7 +1,7 @@
-import { PlusIcon, UserIcon } from '@comps/Icons'
+import { ListFavIcon, ListVerifiedIcon, UserIcon } from '@comps/Icons'
 import { imgProxy } from '@nostr/consts'
 import { useThemeContext } from '@src/context/Theme'
-import { highlight as hi } from '@styles'
+import { highlight as hi, mainColors } from '@styles'
 import { isStr } from '@util'
 import { Image } from 'expo-image'
 import { useState } from 'react'
@@ -17,11 +17,20 @@ interface IProfilePicProps {
 	uri?: string
 	size?: number
 	isUser?: boolean
-	withPlusIcon?: boolean
 	overlayColor?: string
+	isFav?: boolean
+	isVerified?: boolean
 }
 
-export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overlayColor }: IProfilePicProps & INostrImg) {
+export default function ProfilePic({
+	hex,
+	uri,
+	size,
+	isUser,
+	overlayColor,
+	isFav,
+	isVerified
+}: IProfilePicProps & INostrImg) {
 	const { color, highlight } = useThemeContext()
 	const [isErr, setIsErr] = useState(false)
 	const defaultSize = isUser ? 60 : 40
@@ -32,7 +41,7 @@ export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overl
 	}
 
 	return (
-		<>
+		<View style={{ position: 'relative', marginRight: isUser ? 0 : 10 }}>
 			{isStr(uri) && uri?.length && !isErr ?
 				<Image
 					// https://docs.expo.dev/versions/latest/sdk/image/
@@ -44,7 +53,7 @@ export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overl
 					style={[
 						styles.circle,
 						styles.img,
-						{ overlayColor, marginRight: isUser ? 0 : 10 },
+						{ overlayColor },
 						circleStyle
 					]}
 				/>
@@ -54,18 +63,23 @@ export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overl
 					{
 						borderColor: color.BORDER,
 						backgroundColor: color.INPUT_BG,
-						marginRight: 10,
 						...circleStyle
 					}
 				]}>
-					{withPlusIcon ?
-						<PlusIcon color={hi[highlight]} />
-						:
-						<UserIcon width={30} height={30} color={hi[highlight]} />
-					}
+					<UserIcon width={isUser ? 15 : 30} height={isUser ? 15 : 30} color={hi[highlight]} />
 				</View>
 			}
-		</>
+			{!isUser && isVerified &&
+				<View style={[styles.imgIcon, styles.right]}>
+					<ListVerifiedIcon width={14} height={14} />
+				</View>
+			}
+			{!isUser && isFav &&
+				<View style={[styles.imgIcon, styles.left]}>
+					<ListFavIcon width={14} height={14} color={mainColors.STAR} />
+				</View>
+			}
+		</View>
 	)
 }
 
@@ -78,5 +92,16 @@ const styles = StyleSheet.create({
 	},
 	img: {
 		borderWidth: 0,
+	},
+	imgIcon: {
+		position: 'absolute',
+		bottom: 0,
+		zIndex: 2,
+	},
+	right: {
+		right: 0,
+	},
+	left: {
+		left: 0,
 	}
 })

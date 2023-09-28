@@ -9,12 +9,14 @@ export enum Colors {
 	L_Text_Secondary = '#ADADAD',
 	L_Input_Bg = '#F6F6F6',
 	L_Border = '#D8D8D8',
+	L_DARK_Border = '#C8C8C8',
 	// dark theme
 	D_Background = '#202124',
 	D_Drawer = '#303134',
 	D_Text = '#BDC1C6',
 	D_Text_Secondary = '#999DA2',
 	D_Border = '#5F6368',
+	D_Dark_Border = '#3C4043',
 }
 
 export type Theme = typeof lightTheme | typeof darkTheme
@@ -28,6 +30,7 @@ export const lightTheme = {
 	INPUT_BG: Colors.L_Input_Bg,
 	INPUT_PH: Colors.L_Text,
 	BORDER: Colors.L_Border,
+	DARK_BORDER: Colors.L_DARK_Border,
 }
 
 // dark theme
@@ -39,6 +42,7 @@ const darkTheme = {
 	INPUT_BG: Colors.D_Drawer,
 	INPUT_PH: Colors.D_Border,
 	BORDER: Colors.D_Border,
+	DARK_BORDER: Colors.D_Dark_Border,
 }
 
 export const light: ExtendedTheme = {
@@ -108,7 +112,8 @@ export enum mainColors {
 	WHITE = '#FAFAFA',
 	GREY = '#999',
 	BLUE = '#027DFF',
-	ZAP = H_Colors.Zap
+	ZAP = H_Colors.Zap,
+	STAR = '#E5BC50'
 }
 
 export const themeColors = Object.keys(highlight) as HighlightKey[]
