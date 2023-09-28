@@ -4,9 +4,10 @@ import { useThemeContext } from '@src/context/Theme'
 import { l } from '@src/logger'
 import { highlight as hi } from '@styles'
 import { isStr } from '@util'
+import * as Application from 'expo-application'
 import { Image } from 'expo-image'
 import { useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 
 interface INostrImg {
 	hex: string
@@ -48,6 +49,9 @@ export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overl
 					source={{
 						uri: `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`,
 						cacheKey: `${hex}-picture-64-${circleStyle.width}-${encodeURIComponent(uri)}.cachedImg`,
+						headers: {
+							Referrer: `${Application.applicationName}-${Application.nativeBuildVersion}-${Platform.OS}`
+						}
 					}}
 					transition={200}
 					contentFit='cover'
