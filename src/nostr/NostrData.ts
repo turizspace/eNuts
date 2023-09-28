@@ -27,6 +27,7 @@ export interface INostrDataUser {
 	contacts: { list: string[]; createdAt: number }
 }
 export class NostrData {
+	static #ids = new Set<string>()
 	public static cleanCache() { return new TTLCache('__ttlCacheProfiles__', 1000 * 60 * 60 * 24).clear() }
 	public cleanCache() { return this.#ttlCache.clear() }
 	get hex(): Readonly<string> { return this.#user.hex }
@@ -150,13 +151,19 @@ export class NostrData {
 		if (relays.length < 2) { relays = this.mergeRelays(defaultRelays) }
 		if (cachedContacts && cachedUser) { return }
 		const sub = relay.subscribePool({
-			relayUrls: relays,
-			authors: [this.#user.hex],
-			kinds: [EventKind.Metadata, EventKind.ContactList, EventKind.Relays],
-			skipVerification: Config.skipVerification,
+			args: {
+				alreadyHaveEvent: (id, _relay) => NostrData.#ids.has(id)
+			},
+			filter: {
+				relayUrls: relays,
+				authors: [this.#user.hex],
+				kinds: [EventKind.Metadata, EventKind.ContactList, EventKind.Relays],
+				skipVerification: Config.skipVerification,
+			}
 		})
 		let latestRelays = 0 // createdAt
 		sub?.on('event', (e: NostrEvent) => {
+			NostrData.#ids.add(e.id)
 			if (+e.kind === EventKind.Relays) { this.#parseRelays(e) }
 			if (+e.kind === EventKind.Metadata) {
 				const p = this.#profiles[this.#user.hex]
@@ -208,10 +215,13 @@ export class NostrData {
 		let relays = this.mergeRelays([])
 		if (relays.length < 2) { relays = this.mergeRelays(defaultRelays) }
 		const sub = relay.subscribePool({
-			relayUrls: relays,
-			authors: [hex],
-			kinds: [EventKind.Metadata],
-			skipVerification: Config.skipVerification,
+			args: {},
+			filter: {
+				relayUrls: relays,
+				authors: [hex],
+				kinds: [EventKind.Metadata],
+				skipVerification: Config.skipVerification,
+			}
 		})
 		this.#metadataSubs[hex] = true
 		sub?.on('eose', () => {
@@ -251,10 +261,13 @@ export class NostrData {
 		let relays = this.mergeRelays([])
 		if (relays.length < 2) { relays = this.mergeRelays(defaultRelays) }
 		const sub = relay.subscribePool({
-			relayUrls: relays,
-			authors: hex,
-			kinds: [EventKind.Metadata],
-			skipVerification: Config.skipVerification,
+			args: {},
+			filter: {
+				relayUrls: relays,
+				authors: hex,
+				kinds: [EventKind.Metadata],
+				skipVerification: Config.skipVerification,
+			}
 		})
 		hex.forEach(h => this.#metadataSubs[h] = true)
 		sub?.on('eose', () => {

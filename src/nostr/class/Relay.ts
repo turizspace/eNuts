@@ -1,9 +1,13 @@
 import { l } from '@log'
 import { isErr } from '@util'
-import { type Filter, finishEvent, SimplePool, type Sub, validateEvent } from 'nostr-tools'
+import { type Filter, finishEvent, SimplePool, type Sub, type SubscriptionOptions, validateEvent } from 'nostr-tools'
 
 import { defaultRelays } from '../consts'
 
+interface IPoolSubArgs {
+	filter: IPoolSubProps,
+	args?: SubscriptionOptions
+}
 interface IPoolSubProps<K extends number = number> extends Filter<K> {
 	relayUrls?: string[]
 	skipVerification?: boolean
@@ -27,7 +31,7 @@ class Relay {
 	#relays: string[] = []
 
 	constructor() { }
-	subscribePool({ relayUrls, authors, kinds, skipVerification, ...conf }: IPoolSubProps) {
+	subscribePool({ args, filter: { relayUrls, authors, kinds, skipVerification, ...conf } }: IPoolSubArgs) {
 		try {
 			if (!this.#pool) { this.#connectPool() }
 			const relays = relayUrls?.length ? relayUrls : defaultRelays
@@ -35,7 +39,10 @@ class Relay {
 			const sub = this.#pool?.sub(
 				relays,
 				[{ authors, kinds, ...conf }],
-				{ skipVerification }
+				{
+					...args ?? {},
+					skipVerification,
+				}
 			)
 			this.#sub = sub
 			this.#poolSubs++
