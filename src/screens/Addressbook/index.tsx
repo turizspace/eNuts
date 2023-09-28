@@ -24,7 +24,7 @@ import { secureStore, store } from '@store'
 import { SECRET, STORE_KEYS } from '@store/consts'
 import { getCustomMintNames } from '@store/mintStore'
 import { globals } from '@styles'
-import { getStrFromClipboard, openUrl, uniq } from '@util'
+import { getStrFromClipboard, isArrOfStr, openUrl, uniq } from '@util'
 import { generatePrivateKey, getPublicKey, nip19 } from 'nostr-tools'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -148,7 +148,17 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			ref.current = new NostrData(hex, {
 				onUserMetadataChanged: p => setUserProfile(p),
 				// note: creating a new state each event can cause wrong rendering of contacts metadata due to the flashlist viewport event?
-				onContactsChanged: hexArr => setContacts(hexArr.map(x => ([x, undefined]))),
+				onContactsChanged: (_hexArr, added, removed) => {
+					l('[onContactsChanged', { _hexArr, added, removed })
+					setContacts(prev => [
+						...isArrOfStr(removed) && removed?.length
+							? prev.filter(([hex]) => !removed?.includes(hex))
+							: [],
+						...isArrOfStr(added) && added.length
+							? added.map<TContact>(x => [x, undefined])
+							: [],
+					])
+				},
 				onProfileChanged: profile => {
 					setContacts(prev => prev.map(x => x[0] === profile?.[0] ? profile : x))
 				},

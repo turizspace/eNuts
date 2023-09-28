@@ -1,25 +1,24 @@
+import { l } from '@src/logger'
 
 /**
  * Default bootstrap relays
  */
 export const defaultRelays = [
+	'wss://relay.nostr.band',
 	'wss://relay.damus.io',
 	'wss://nostr-pub.wellorder.net',
 	'wss://nostr.mom',
-	'wss://4.up.railway.app',
 	'wss://eden.nostr.land',
+	'wss://nos.lol',
+	'wss://relay.snort.social',
 	'wss://nostr-relay.untethr.me',
 	'wss://nostr.zebedee.social',
 	'wss://offchain.pub',
 	'wss://nostr.fmt.wiz.biz',
 	'wss://nostr-relay.wlvs.space',
-	'wss://nostr.fly.dev',
-	'wss://nostr.nostr.band',
 	'wss://relay.realsearch.cc',
 	'wss://relay.nostrgraph.net',
-	'wss://relay.minds.com/nostr/v1/ws',
-	'wss://nos.lol/',
-	'wss://relay.snort.social',
+	'wss://relay.minds.com/nostr/v1/ws'
 ]
 
 export const EventKind = {
@@ -89,5 +88,6 @@ export function imgProxy(
 	kind: 'picture' | 'banner' = 'picture',
 	size: 64 | 192 | 600 | 1200 = 64
 ): string {
+	l('img', url)
 	return `${PREFIX}/hex/${hex}/${kind}/${size}?_=${encodeURIComponent(url)}&s=${width ?? 40}`
 }

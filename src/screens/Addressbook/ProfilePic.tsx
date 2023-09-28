@@ -1,6 +1,7 @@
 import { PlusIcon, UserIcon } from '@comps/Icons'
 import { imgProxy } from '@nostr/consts'
 import { useThemeContext } from '@src/context/Theme'
+import { l } from '@src/logger'
 import { highlight as hi } from '@styles'
 import { isStr } from '@util'
 import { Image } from 'expo-image'
@@ -30,15 +31,24 @@ export default function ProfilePic({ hex, uri, size, isUser, withPlusIcon, overl
 		height: size || defaultSize,
 		borderRadius: size ? size / 2 : defaultSize / 2
 	}
-
+	/* useEffect(() => {
+		if (!uri || !isUrl(uri)) { return }
+		Image.prefetch(`${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`)
+	}) */
 	return (
 		<>
 			{isStr(uri) && uri?.length && !isErr ?
 				<Image
 					// https://docs.expo.dev/versions/latest/sdk/image/
-					onError={(_e => setIsErr(true))}
-					source={`${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`}
 					cachePolicy='disk'
+					onError={(e => {
+						l('img err for url', uri, e, `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`)
+						setIsErr(true)
+					})}
+					source={{
+						uri: `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`,
+						cacheKey: `${hex}-picture-64-${circleStyle.width}-${encodeURIComponent(uri)}.cachedImg`,
+					}}
 					transition={200}
 					contentFit='cover'
 					style={[

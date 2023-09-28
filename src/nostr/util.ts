@@ -85,3 +85,11 @@ export function truncateNostrProfileInfo(str: string, maxLength = 20) {
 export function getNostrUsername(contact?: IProfileContent) {
 	return contact?.displayName || contact?.display_name || contact?.username || contact?.name || ''
 }
+
+
+export function isHex(s: unknown) {
+	return typeof s === 'string' && s.length === 64 && /[0-9a-fA-F]{64}/.test(s)
+}
+export function isNpub(s: unknown): s is `npub1${string}` {
+	return typeof s === 'string' && s.length === 63 && /npub1[023456789acdefghjklmnpqrstuvwxyz]{58}/.test(s)
+}

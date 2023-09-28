@@ -15,7 +15,7 @@ export interface IOnProfileChangedHandler {
 	(profile: [string, IProfileContent]): void
 }
 export interface IOnContactsChangedHandler {
-	(contacts: string[]): void
+	(contacts: string[], added?: string[], removed?: string[]): void
 }
 
 export interface IOnUserMetadataChangedHandler {
@@ -30,7 +30,7 @@ export class NostrData {
 	public static cleanCache() { return new TTLCache('__ttlCacheProfiles__', 1000 * 60 * 60 * 24).clear() }
 	public cleanCache() { return this.#ttlCache.clear() }
 	get hex(): Readonly<string> { return this.#user.hex }
-	public getOneProfile(hex:string): Readonly<IProfileContent|undefined > { return this.#profiles[hex]?.profile }
+	public getOneProfile(hex: string): Readonly<IProfileContent | undefined> { return this.#profiles[hex]?.profile }
 	get profiles(): Readonly<{ [k: string]: { profile: IProfileContent; createdAt: number } }> { return this.#profiles }
 	get relays(): Readonly<{ read: string[]; write: string[]; createdAt: number }> { return this.#user.relays }
 	get user(): Readonly<INostrDataUser> { return this.#user }
@@ -49,7 +49,7 @@ export class NostrData {
 			onUserMetadataChanged,
 			userRelays
 		}: {
-				onProfileChanged?: IOnProfileChangedHandler,
+			onProfileChanged?: IOnProfileChangedHandler,
 			onContactsChanged?: IOnContactsChangedHandler,
 			onUserMetadataChanged?: IOnUserMetadataChangedHandler,
 			userRelays?: string[]
@@ -140,7 +140,7 @@ export class NostrData {
 		if (cachedContacts?.list?.length) {
 			l('cache hit contacts', cachedContacts.list.length)
 			this.#user.contacts = cachedContacts
-			this.#onContactsChanged?.(cachedContacts.list)
+			this.#onContactsChanged?.(cachedContacts.list, cachedContacts.list)
 			// void this.#loadCached()
 		}
 		const cachedRelays = await this.#ttlCache.getObj<string[]>('relays')
@@ -179,11 +179,14 @@ export class NostrData {
 					void this.#ttlCache.setObj('relays', relays)
 				}
 				if (e.created_at > this.#user.contacts.createdAt) {
-					this.#user.contacts.list = filterFollows(e.tags)
+					const newList = filterFollows(e.tags)
+					this.#user.contacts.list = newList
 					this.#user.contacts.createdAt = e.created_at
-					this.#onContactsChanged?.(this.#user.contacts.list)
 					void this.#ttlCache.setObj('contacts', this.#user.contacts)
 					// void this.#loadCached()
+					const added = newList.filter(x => !this.#user.contacts.list.includes(x))
+					const removed = this.#user.contacts.list.filter(x => !newList.includes(x))
+					this.#onContactsChanged?.(this.#user.contacts.list, added, removed)
 				}
 			}
 		})
@@ -221,6 +224,43 @@ export class NostrData {
 				this.#onProfileChanged?.([hex, this.#profiles[hex].profile])
 				if (hex === this.#user.hex) {
 					this.#onUserMetadataChanged?.(this.#profiles[hex].profile)
+				}
+			}
+		})
+	}
+	public async setupMetadataSub2(hex: string[]) {
+		if (!hex?.length || hex.every(x => this.#profiles[x]?.profile)) { return }
+		/* const e = await this.#ttlCache.getObj<{ profile: IProfileContent; createdAt: number }>(hex)
+		if (e) {
+			l('cache hit')
+			this.#profiles[hex] = e
+			this.#onProfileChanged?.([hex, this.#profiles[hex].profile])
+			if (hex === this.#user.hex) {
+				this.#onUserMetadataChanged?.(this.#profiles[hex].profile)
+			}
+			return
+		} */
+		l('cache miss')
+		let relays = this.mergeRelays([])
+		if (relays.length < 2) { relays = this.mergeRelays(defaultRelays) }
+		const sub = relay.subscribePool({
+			relayUrls: relays,
+			authors: hex,
+			kinds: [EventKind.Metadata],
+			skipVerification: Config.skipVerification,
+		})
+		sub?.on('event', (e: NostrEvent) => {
+			if (+e.kind !== EventKind.Metadata) { return }
+			const p = this.#profiles[e.pubkey]
+			if (!p || e.created_at > p.createdAt) {
+				this.#profiles[e.pubkey] = {
+					profile: parseProfileContent(e),
+					createdAt: e.created_at,
+				}
+				void this.#ttlCache.setObj(e.pubkey, this.#profiles[e.pubkey])
+				this.#onProfileChanged?.([e.pubkey, this.#profiles[e.pubkey].profile])
+				if (e.pubkey === this.#user.hex) {
+					this.#onUserMetadataChanged?.(this.#profiles[e.pubkey].profile)
 				}
 			}
 		})
