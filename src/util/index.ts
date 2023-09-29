@@ -22,6 +22,13 @@ export function uniq<T extends string | number | bigint | boolean | symbol>(iter
 	return [...new Set(iter)]
 }
 
+export function uniqBy<T extends object, TK extends keyof T>(iter: Iterable<T>, key: TK) {
+	const o = [...iter].reduce<{ [k: string | number | symbol]: T }>((acc, cur) => {
+		acc[key] = cur
+		return acc
+	}, {})
+	return Object.values<T>(o)
+}
 export function clearArr<T extends U[], U>(array: T) { array.length = 0 }
 
 /**
@@ -297,12 +304,12 @@ export async function share(message: string, url?: string) {
 		if (res.action === Share.sharedAction) {
 			if (res.activityType) {
 				// shared with activity type of result.activityType
-				l('shared with activity type of result.activityType')
-			} else {
-				// shared
-				l('shared')
+				return l('shared with activity type of result.activityType')
 			}
-		} else if (res.action === Share.dismissedAction) {
+			// shared
+			return l('shared')
+		}
+		if (res.action === Share.dismissedAction) {
 			// dismissed
 			l('sharing dismissed')
 		}

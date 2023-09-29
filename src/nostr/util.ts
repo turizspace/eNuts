@@ -1,4 +1,5 @@
-import type { IProfileContent } from '@model/nostr'
+import type { IProfileContent, Npub } from '@model/nostr'
+import { isStr } from '@src/util'
 import { cTo } from '@store/utils'
 import { Event as NostrEvent } from 'nostr-tools'
 
@@ -54,8 +55,8 @@ export function parseUserRelays(relays: string) {
 /**
  * Truncates the npub of a user
  */
-export function truncateNpub(npub: string) {
-	return npub.slice(0, 8) + ':' + npub.slice(-8)
+export function truncateNpub(npub: Npub): Npub {
+	return npub.slice(0, 8) + ':' + npub.slice(-8) as Npub
 }
 
 /**
@@ -67,12 +68,7 @@ export function truncateNpub(npub: string) {
  */
 export function truncateNostrProfileInfo(str: string, maxLength = 20) {
 	if (str.length <= maxLength) { return str }
-	const truncated = [...str].reduce((result, char) => {
-		if (result.length < maxLength) {
-			result += char
-		}
-		return result
-	}, '')
+	const truncated = [...str].slice(0, maxLength).join('')
 	return truncated + (str.length > maxLength ? '...' : '')
 }
 
@@ -84,4 +80,12 @@ export function truncateNostrProfileInfo(str: string, maxLength = 20) {
  */
 export function getNostrUsername(contact?: IProfileContent) {
 	return contact?.displayName || contact?.display_name || contact?.username || contact?.name || ''
+}
+
+
+export function isHex(s: unknown): s is string {
+	return isStr(s) && s.length === 64 && /[0-9a-fA-F]{64}/.test(s)
+}
+export function isNpub(s: unknown): s is Npub {
+	return isStr(s) && s.length === 63 && /npub1[023456789acdefghjklmnpqrstuvwxyz]{58}/.test(s)
 }

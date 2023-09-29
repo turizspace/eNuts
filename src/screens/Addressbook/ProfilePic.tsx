@@ -1,11 +1,13 @@
 import { ListFavIcon, ListVerifiedIcon, UserIcon } from '@comps/Icons'
 import { imgProxy } from '@nostr/consts'
 import { useThemeContext } from '@src/context/Theme'
-import { highlight as hi, mainColors } from '@styles'
+import { l } from '@src/logger'
+import { highlight as hi } from '@styles'
 import { isStr } from '@util'
+import * as Application from 'expo-application'
 import { Image } from 'expo-image'
 import { useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 
 interface INostrImg {
 	hex: string
@@ -39,15 +41,27 @@ export default function ProfilePic({
 		height: size || defaultSize,
 		borderRadius: size ? size / 2 : defaultSize / 2
 	}
-
+	/* useEffect(() => {
+		if (!uri || !isUrl(uri)) { return }
+		Image.prefetch(`${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`)
+	}) */
 	return (
 		<View style={{ position: 'relative', marginRight: isUser ? 0 : 10 }}>
 			{isStr(uri) && uri?.length && !isErr ?
 				<Image
 					// https://docs.expo.dev/versions/latest/sdk/image/
-					onError={(_e => setIsErr(true))}
-					source={`${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`}
 					cachePolicy='disk'
+					onError={(e => {
+						l('img err for url', uri, e, `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`)
+						setIsErr(true)
+					})}
+					source={{
+						uri: `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`,
+						cacheKey: `${hex}-picture-64-${circleStyle.width}-${encodeURIComponent(uri)}.cachedImg`,
+						headers: {
+							Referrer: `${Application.applicationName}-${Application.nativeBuildVersion}-${Platform.OS}`
+						}
+					}}
 					transition={200}
 					contentFit='cover'
 					style={[

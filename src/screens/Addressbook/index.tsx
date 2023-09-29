@@ -12,7 +12,8 @@ import type { TAddressBookPageProps } from '@model/nav'
 import type { IProfileContent, TContact, TUserRelays } from '@model/nostr'
 import BottomNav from '@nav/BottomNav'
 import TopNav from '@nav/TopNav'
-import { getNostrUsername } from '@nostr/util'
+import { defaultRelays } from '@nostr/consts'
+import { getNostrUsername, isHex, isNpub } from '@nostr/util'
 import { FlashList, type ViewToken } from '@shopify/flash-list'
 import { useNostrContext } from '@src/context/Nostr'
 import { usePromptContext } from '@src/context/Prompt'
@@ -23,7 +24,7 @@ import { secureStore, store } from '@store'
 import { SECRET, STORE_KEYS } from '@store/consts'
 import { getCustomMintNames } from '@store/mintStore'
 import { globals } from '@styles'
-import { getStrFromClipboard, openUrl, uniq } from '@util'
+import { getStrFromClipboard, isArrOfStr, openUrl, uniq } from '@util'
 import { generatePrivateKey, getPublicKey, nip19 } from 'nostr-tools'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -104,17 +105,19 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		}
 		let pub = { encoded: '', hex: '' }
 		// check if is npub
-		if (clipboard.startsWith('npub')) {
-			pub = { encoded: clipboard, hex: nip19.decode(clipboard).data as string || '' }
+		if (isNpub(clipboard)) {
+			pub = { encoded: clipboard, hex: nip19.decode(clipboard).data || '' }
 			setPubKey(pub)
 			// start initialization of nostr data
 			await handleNewNpub(pub)
 			return
 		}
 		try {
-			const encoded = nip19.npubEncode(clipboard)
-			pub = { encoded, hex: clipboard }
-			setPubKey(pub)
+			if (isHex(clipboard)) {
+				const encoded = nip19.npubEncode(clipboard)
+				pub = { encoded, hex: clipboard }
+				setPubKey(pub)
+			}
 		} catch (e) {
 			openPromptAutoClose({ msg: t('invalidPubKey') })
 			stopLoading()
@@ -151,19 +154,24 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 			ref.current = new NostrData(hex, {
 				onUserMetadataChanged: p => setUserProfile(p),
 				// note: creating a new state each event can cause wrong rendering of contacts metadata due to the flashlist viewport event?
-				onContactsChanged: hexArr => {
-					setContacts(hexArr
-						.sort((a, b) => {
-							const aIsFav = favs.includes(a)
-							const bIsFav = favs.includes(b)
-							// a comes before b (a is a favorite)
-							if (aIsFav && !bIsFav) { return -1 }
-							// b comes before a (b is a favorite)
-							if (!aIsFav && bIsFav) { return 1 }
-							return 0
-						})
-						.map(x => [x, undefined])
-					)
+				onContactsChanged: (_hexArr, added, removed) => {
+					l('[onContactsChanged', { _hexArr, added, removed })
+					setContacts(prev => [
+						...isArrOfStr(removed) && removed?.length
+							? prev.filter(([hex]) => !removed?.includes(hex))
+							: [],
+						...isArrOfStr(added) && added.length
+							? added.map<TContact>(x => [x, undefined])
+							: [],
+					].sort((a, b) => {
+						const aIsFav = favs.includes(a[0])
+						const bIsFav = favs.includes(b[0])
+						// a comes before b (a is a favorite)
+						if (aIsFav && !bIsFav) { return -1 }
+						// b comes before a (b is a favorite)
+						if (!aIsFav && bIsFav) { return 1 }
+						return 0
+					}))
 				},
 				onProfileChanged: profile => {
 					setContacts(prev => prev.map(x => x[0] === profile?.[0] ? profile : x))
