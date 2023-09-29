@@ -2,11 +2,11 @@ import type { EventArg } from '@react-navigation/core'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 
 import type { IHistoryEntry, IMintUrl, IMintWithBalance, IProofSelection } from '.'
-import { IProfileContent, Npub } from './nostr'
+import { IProfileContent } from './nostr'
 
 interface INostrProps {
 	senderName: string
-	receiverNpub: string
+	receiverHex: string
 	receiverName?: string
 }
 /**
@@ -167,7 +167,7 @@ export type RootStackParamList = {
 	}
 	Contact: {
 		contact?: IProfileContent
-		npub: Npub
+		hex: string
 		isUser?: boolean
 		userProfile?: IProfileContent
 	}

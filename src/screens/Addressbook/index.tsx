@@ -9,10 +9,10 @@ import { isIOS } from '@consts'
 import { getMintsBalances } from '@db'
 import { l } from '@log'
 import type { TAddressBookPageProps } from '@model/nav'
-import type { IProfileContent, TContact, TUserRelays } from '@model/nostr'
+import type { HexKey, IProfileContent, TContact, TUserRelays } from '@model/nostr'
 import BottomNav from '@nav/BottomNav'
 import TopNav from '@nav/TopNav'
-import { defaultRelays } from '@nostr/consts'
+// import { defaultRelays } from '@nostr/consts'
 import { getNostrUsername, isHex, isNpub } from '@nostr/util'
 import { FlashList, type ViewToken } from '@shopify/flash-list'
 import { useNostrContext } from '@src/context/Nostr'
@@ -206,12 +206,12 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	}, [setMetadata])
 
 	// user opens contact screen or proceeds with a payment related action
-	const handleContactPress = ({ contact, npub, isUser }: { contact?: IProfileContent, npub?: string, isUser?: boolean }) => {
+	const handleContactPress = ({ contact, hex, isUser }: { contact?: IProfileContent, hex?: HexKey, isUser?: boolean }) => {
 		// navigate to contact screen
 		if (contact && !isUser && !route.params?.isSendEcash && !route.params?.isMelt) {
 			navigation.navigate('Contact', {
 				contact,
-				npub: npub || '',
+				hex: hex || '',
 				isUser,
 				userProfile
 			})
@@ -225,7 +225,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		}
 		// user wants to send ecash
 		if (!isUser && route.params?.isSendEcash) {
-			handleEcash(npub, getNostrUsername(contact))
+			handleEcash(hex, getNostrUsername(contact))
 			return
 		}
 		if (!userProfile || !contact) {
@@ -235,7 +235,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		// navigate to user profile
 		navigation.navigate('Contact', {
 			contact: userProfile,
-			npub: pubKey.encoded,
+			hex: pubKey.hex,
 			isUser
 		})
 	}
@@ -263,7 +263,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	}
 
 	// user is in ecash payment process
-	const handleEcash = (receiverNpub?: string, receiverName?: string) => {
+	const handleEcash = (receiverHex?: HexKey, receiverName?: string) => {
 		if (!route.params) { return }
 		const { mint, balance, isSendEcash } = route.params
 		navigation.navigate(
@@ -274,7 +274,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 				isSendEcash,
 				nostr: {
 					senderName: getNostrUsername(userProfile),
-					receiverNpub: (nip19.decode(receiverNpub || '').data || '') as string,
+					receiverHex: receiverHex || '',
 					receiverName,
 				},
 			}
@@ -282,13 +282,13 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	}
 
 	// user presses the send ecash button
-	const handleSend = async ({ npub, name }: { npub: string, name?: string }) => {
+	const handleSend = async ({ hex, name }: { hex: HexKey, name?: string }) => {
 		const mintsWithBal = await getMintsBalances()
 		const mints = await getCustomMintNames(mintsWithBal.map(m => ({ mintUrl: m.mintUrl })))
 		const nonEmptyMints = mintsWithBal.filter(m => m.amount > 0)
 		const nostr = {
 			senderName: getNostrUsername(userProfile),
-			receiverNpub: npub,
+			receiverHex: hex,
 			receiverName: name,
 		}
 		if (nonEmptyMints.length === 1) {
@@ -315,11 +315,22 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 				screenName={route.params?.isMelt ? t('cashOut') : t('addressBook', { ns: NS.topNav })}
 				withBackBtn={isSending}
 				nostrProfile={userProfile?.picture}
-				handlePress={() => isSending ? navigation.goBack() : navigation.navigate('Contact', {
-					contact: userProfile,
-					npub: pubKey.encoded,
-					isUser: true
-				})}
+				handlePress={() => {
+					if (isSending) {
+						navigation.goBack()
+						return
+					}
+					if (!isNpub(pubKey.encoded)) {
+						// TODO prompt user
+						l('invalid user npub')
+						return
+					}
+					navigation.navigate('Contact', {
+						contact: userProfile,
+						hex: pubKey.hex,
+						isUser: true
+					})
+				}}
 			/>
 			{loading || (nutPub && !contacts.length) ?
 				<View style={styles.loadingWrap}><Loading /></View>
@@ -334,7 +345,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 							keyExtractor={item => item[0]}
 							renderItem={({ item }) => (
 								<TouchableOpacity onPress={() => void handleSend({
-									npub: nip19.npubEncode(item[0]),
+									hex: item[0],
 									name: getNostrUsername(item[1])
 								})}>
 									<ProfilePic
@@ -374,10 +385,10 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 										hex={item[0]}
 										contact={item}
 										handleContactPress={() => (
-											handleContactPress({ contact: item[1], npub: nip19.npubEncode(item[0]) })
+											handleContactPress({ hex: item[0], contact: item[1] })
 										)}
 										handleSend={() => void handleSend({
-											npub: item[0],
+											hex: item[0],
 											name: getNostrUsername(item[1])
 										})}
 										isPayment={route.params?.isMelt || route.params?.isSendEcash}

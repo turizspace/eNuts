@@ -21,7 +21,7 @@ export default function Sender({ contact, navigation }: ISenderProps) {
 	const handleContactPress = () => {
 		navigation.navigate('Contact', {
 			contact: contact?.[1],
-			npub: contact?.[0] || ''
+			hex: contact?.[0] || ''
 		})
 	}
 
@@ -38,14 +38,7 @@ export default function Sender({ contact, navigation }: ISenderProps) {
 				/>
 				{contact?.[1] ?
 					<View>
-						<Username
-							displayName={contact[1].displayName}
-							display_name={contact[1].display_name}
-							username={contact[1].username}
-							name={contact[1].name}
-							npub={truncateNpub(nip19.npubEncode(contact[0]))}
-							fontSize={16}
-						/>
+						<Username contact={contact} fontSize={16} />
 						{contact[1].about?.length &&
 							<Txt
 								txt={truncateNostrProfileInfo(contact[1].about)}

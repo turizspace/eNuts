@@ -5,7 +5,7 @@ import { getProofsByMintUrl } from '@db'
 import type { IProofSelection } from '@model'
 import type { TCoinSelectionPageProps } from '@model/nav'
 import TopNav from '@nav/TopNav'
-import { truncateNpub } from '@nostr/util'
+import { truncateNostrProfileInfo, truncateNpub } from '@nostr/util'
 import { useThemeContext } from '@src/context/Theme'
 import { NS } from '@src/i18n'
 import { globals } from '@styles'
@@ -55,9 +55,9 @@ export default function CoinSelectionScreen({ navigation, route }: TCoinSelectio
 
 	const getRecipient = () => {
 		if (recipient) {
-			return recipient.length > 16 && !isLnurl(recipient) ? recipient.slice(0, 16) + '...' : recipient
+			return !isLnurl(recipient) ? truncateNostrProfileInfo(recipient, 16) : recipient
 		}
-		return nostr && nostr.receiverName ? nostr.receiverName : truncateNpub(nip19.npubEncode(nostr?.receiverNpub || ''))
+		return nostr && nostr.receiverName ? nostr.receiverName : truncateNpub(nip19.npubEncode(nostr?.receiverHex ?? ''))
 	}
 
 	const submitPaymentReq = () => {

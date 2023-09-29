@@ -49,14 +49,7 @@ export default function ContactPreview({ hex, contact, handleContactPress, handl
 				/>
 				{contact[1] ?
 					<View style={styles.nameWrap}>
-						<Username
-							displayName={contact[1].displayName}
-							display_name={contact[1].display_name}
-							username={contact[1].username}
-							name={contact[1].name}
-							npub={truncateNpub(nip19.npubEncode(contact[0]))}
-							fontSize={16}
-						/>
+						<Username contact={contact} fontSize={16} />
 						{contact?.[1]?.nip05 &&
 							<Txt
 								txt={truncateNostrProfileInfo(contact[1].nip05, 25)}

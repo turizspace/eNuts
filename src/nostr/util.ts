@@ -55,8 +55,8 @@ export function parseUserRelays(relays: string) {
 /**
  * Truncates the npub of a user
  */
-export function truncateNpub(npub: Npub): Npub {
-	return npub.slice(0, 8) + ':' + npub.slice(-8) as Npub
+export function truncateNpub(npub: string) {
+	return npub.slice(0, 8) + ':' + npub.slice(-8)
 }
 
 /**
@@ -69,7 +69,7 @@ export function truncateNpub(npub: Npub): Npub {
 export function truncateNostrProfileInfo(str: string, maxLength = 20) {
 	if (str.length <= maxLength) { return str }
 	const truncated = [...str].slice(0, maxLength).join('')
-	return truncated + (str.length > maxLength ? '...' : '')
+	return `${truncated}...`
 }
 
 /**

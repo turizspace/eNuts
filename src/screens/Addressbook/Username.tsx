@@ -1,45 +1,27 @@
 import Txt from '@comps/Txt'
-import type { Npub } from '@model/nostr'
-import { truncateNostrProfileInfo, truncateNpub } from '@nostr/util'
+import type { TContact } from '@model/nostr'
+import { getNostrUsername, truncateNostrProfileInfo, truncateNpub } from '@nostr/util'
+import { nip19 } from 'nostr-tools'
 import { StyleSheet } from 'react-native'
 
 interface IUsernameProps {
-	displayName?: string,
-	display_name?: string,
-	username?: string,
-	name?: string
-	npub: Npub
+	contact?: TContact
 	fontSize?: number
 }
 
-export default function Username({ displayName, display_name, username, name, npub, fontSize }: IUsernameProps) {
-	if (displayName?.length) {
+export default function Username({ contact, fontSize }: IUsernameProps) {
+	const txtStyle = [styles.username, { fontSize: fontSize || 18 }]
+	const n = getNostrUsername(contact?.[1])
+	if (n?.length) {
 		return <Txt
-			txt={truncateNostrProfileInfo(displayName)}
-			styles={[styles.username, { fontSize: fontSize || 18 }]}
+			txt={truncateNostrProfileInfo(n)}
+			styles={txtStyle}
 		/>
 	}
-	if (display_name?.length) {
-		return <Txt
-			txt={truncateNostrProfileInfo(display_name)}
-			styles={[styles.username, { fontSize: fontSize || 18 }]}
-		/>
-	}
-	if (username?.length) {
-		return <Txt
-			txt={truncateNostrProfileInfo(username)}
-			styles={[styles.username, { fontSize: fontSize || 18 }]}
-		/>
-	}
-	if (name?.length) {
-		return <Txt
-			txt={truncateNostrProfileInfo(name)}
-			styles={[styles.username, { fontSize: fontSize || 18 }]}
-		/>
-	}
+	if (!contact?.[0].length) { return 'N/A' }
 	return <Txt
-		txt={truncateNpub(npub)}
-		styles={[styles.username, { fontSize: fontSize || 18 }]}
+		txt={truncateNpub(nip19.npubEncode(contact[0]))}
+		styles={txtStyle}
 	/>
 }
 

@@ -11,6 +11,7 @@ import { useThemeContext } from '@src/context/Theme'
 import { NS } from '@src/i18n'
 import { getCustomMintNames } from '@store/mintStore'
 import { globals, highlight as hi, mainColors } from '@styles'
+import { nip19 } from 'nostr-tools'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -23,7 +24,7 @@ import NIP05Verified from './NIP05'
 import Website from './Website'
 
 export default function ContactPage({ navigation, route }: IContactPageProps) {
-	const { contact, npub, isUser, userProfile } = route.params
+	const { contact, hex, isUser, userProfile } = route.params
 	const { t } = useTranslation([NS.addrBook])
 	const { pubKey } = useNostrContext()
 	const { color, highlight } = useThemeContext()
@@ -49,7 +50,7 @@ export default function ContactPage({ navigation, route }: IContactPageProps) {
 		const nonEmptyMints = mintsWithBal.filter(m => m.amount > 0)
 		const nostr = {
 			senderName: getNostrUsername(userProfile),
-			receiverNpub: npub,
+			receiverHex: hex,
 			receiverName: getNostrUsername(contact),
 		}
 		// TODO this could potentially written in shorter form
@@ -80,11 +81,11 @@ export default function ContactPage({ navigation, route }: IContactPageProps) {
 				<LeftArrow color={mainColors.WHITE} />
 			</TouchableOpacity>
 			{/* Contact pictures overview */}
-			<ProfileBanner hex={npub} uri={contact?.banner} />
+			<ProfileBanner hex={hex} uri={contact?.banner} />
 			<View style={styles.profilePicContainer}>
 				<View style={{ width: 100, height: 100, borderRadius: 50, overflow: 'hidden' }}>
 					<ProfilePic
-						hex={npub}
+						hex={hex}
 						uri={contact?.picture}
 						size={100}
 						isUser={isUser}
@@ -101,23 +102,15 @@ export default function ContactPage({ navigation, route }: IContactPageProps) {
 			</View>
 			<View style={styles.contentWrap}>
 				{/* username */}
-				<Username
-					displayName={contact?.displayName}
-					display_name={contact?.display_name}
-					username={contact?.username}
-					name={contact?.name}
-					npub={npub}
-					fontSize={24}
-				/>
+				<Username contact={[hex, contact]} fontSize={24} />
 				{/* npub */}
-
 				<View style={styles.npubWrap}>
 					<Txt
 						// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-						txt={`${isUser ? t('enutsPub', { ns: NS.common }) : ''}${truncateNpub(isUser ? pubKey.encoded : npub)}`}
+						txt={`${isUser ? t('enutsPub', { ns: NS.common }) : ''}${truncateNpub(isUser ? pubKey.encoded : nip19.npubEncode(hex))}`}
 						styles={[styles.npub, { color: color.TEXT_SECONDARY }]}
 					/>
-					<Copy txt={isUser ? pubKey.encoded : npub} />
+					<Copy txt={isUser ? pubKey.encoded : nip19.npubEncode(hex)} />
 				</View>
 				{/* tags */}
 				<View style={styles.tagsWrap}>

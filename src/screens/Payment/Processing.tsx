@@ -203,10 +203,10 @@ export default function ProcessingScreen({ navigation, route }: TProcessingPageP
 					return
 				}
 				const msg = `${userNostrNpub || nostr.senderName}  (sender not verified) just sent you ${amount} Sat in Ecash using ${enutsPubkey}!\n\n ${token}`
-				const cipherTxt = await encrypt(sk, nostr.receiverNpub, msg)
+				const cipherTxt = await encrypt(sk, nostr.receiverHex, msg)
 				const event = {
 					kind: EventKind.DirectMessage,
-					tags: [['p', nostr.receiverNpub]],
+					tags: [['p', nostr.receiverHex]],
 					content: cipherTxt,
 					created_at: Math.ceil(Date.now() / 1000),
 				}
@@ -222,7 +222,7 @@ export default function ProcessingScreen({ navigation, route }: TProcessingPageP
 					return
 				}
 				// save receipient pubkey to get the conversation later on
-				await updateNostrDmUsers(nostr.receiverNpub)
+				await updateNostrDmUsers(nostr.receiverHex)
 				navigation.navigate('success', { amount, nostr })
 				return
 			}
