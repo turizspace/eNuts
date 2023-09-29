@@ -155,7 +155,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 				onUserMetadataChanged: p => setUserProfile(p),
 				// note: creating a new state each event can cause wrong rendering of contacts metadata due to the flashlist viewport event?
 				onContactsChanged: (_hexArr, added, removed) => {
-					l('[onContactsChanged', { _hexArr, added, removed })
+					l('[onContactsChanged')
 					setContacts(prev => [
 						...isArrOfStr(removed) && removed?.length
 							? prev.filter(([hex]) => !removed?.includes(hex))

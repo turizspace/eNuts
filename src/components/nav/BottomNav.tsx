@@ -69,7 +69,7 @@ export default function BottomNav({ navigation, route }: TBottomNavProps) {
 			</TouchableOpacity>
 			<TouchableOpacity
 				style={styles.navIcon}
-				onPress={() => void handleNav('Settings')}
+				onPress={() => void handleNav('Testlist')}
 				disabled={isSettingsRelatedScreen}
 			>
 				<SettingsIcon width={28} height={28} color={isSettingsRelatedScreen ? hi[highlight] : color.TEXT} />

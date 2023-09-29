@@ -22,7 +22,7 @@ export interface IOnUserMetadataChangedHandler {
 	(profile: IProfileContent): void
 }
 export interface INostrDataUser {
-	hex: string;
+	hex: string
 	relays: { read: string[]; write: string[]; createdAt: number }
 	contacts: { list: string[]; createdAt: number }
 }
@@ -244,9 +244,20 @@ export class NostrData {
 			}
 		})
 	}
-	public setupMetadataSub2(hex: string[]) {
-		hex = hex.filter(x => isHex(hex) && !this.#metadataSubs[x])
+	public setupMetadataSub2(old: string[]) {
+		let hex: string[] = []
+		if (!old?.length && Object.keys(this.#profiles).length < 2) {
+			l('[setupMetadataSub2] first hit')
+			hex = this.#user.contacts.list.slice(0, 20)
+		} else {
+			l('[setupMetadataSub2] next')
+			hex = this.#user.contacts.list.filter(x => !this.#profiles[x]?.profile && isHex(x) && !this.#metadataSubs[x] && !old.includes(x)).slice(0, 20)
+		}
+		// l(hex)
+		hex = hex.filter(x => isHex(x) && !this.#metadataSubs[x] && !old.includes(x) && !this.#profiles[x]?.profile)
+		// l(hex)
 		if (!hex?.length || hex.every(x => this.#profiles[x]?.profile)) { return }
+		l(hex.length, 'subs')
 		/* const e = await this.#ttlCache.getObj<{ profile: IProfileContent; createdAt: number }>(hex)
 		if (e) {
 			l('cache hit')
@@ -289,6 +300,9 @@ export class NostrData {
 				if (e.pubkey === this.#user.hex) {
 					this.#onUserMetadataChanged?.(this.#profiles[e.pubkey].profile)
 				}
+			} else {
+				// l('else', !p, e.created_at > p.createdAt, e)
+				// this.#onProfileChanged?.([e.pubkey, this.#profiles[e.pubkey].profile])
 			}
 		})
 	}

@@ -1,5 +1,5 @@
-import { l } from '@src/logger'
 import { Npub } from '@src/model/nostr'
+import { isUrl } from '@src/util'
 
 /**
  * Default bootstrap relays
@@ -50,7 +50,7 @@ export const EventKind = {
 } as const
 
 
-export const enutsPubkey:Npub = 'npub1dx5q2el8nd4eh3eg9t2e25fd7zuqg7zxz6ldkc3uzgh66ss2yc6st288sj'
+export const enutsPubkey: Npub = 'npub1dx5q2el8nd4eh3eg9t2e25fd7zuqg7zxz6ldkc3uzgh66ss2yc6st288sj'
 
 /**
  * Regex to match a mnemonic seed
@@ -88,6 +88,7 @@ export function imgProxy(
 	kind: 'picture' | 'banner' = 'picture',
 	size: 64 | 192 | 600 | 1200 = 64
 ): string {
-	l('img', url)
+	if (url.startsWith('data:')) { return url }
+	if (!isUrl(url)) { return '' }
 	return `${PREFIX}/hex/${hex}/${kind}/${size}?_=${encodeURIComponent(url)}&s=${width ?? 40}`
 }

@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/core'
 import { createNativeStackNavigator, type NativeStackNavigationProp } from '@react-navigation/native-stack'
 import AddressbookPage from '@screens/Addressbook'
 import ContactPage from '@screens/Addressbook/Contact'
+import TestList from '@screens/Addressbook/TestList'
 import AuthPage from '@screens/Auth'
 import Dashboard from '@screens/Dashboard'
 import { Disclaimer } from '@screens/Disclaimer'
@@ -154,6 +155,7 @@ export default function Navigator({
 				<Stack.Screen name='Address book' component={AddressbookPage} />
 				<Stack.Screen name='Contact' component={ContactPage} />
 				<Stack.Screen name='Settings' component={Settings} />
+				<Stack.Screen name='Testlist' component={TestList} />
 				<Stack.Screen name='General settings' component={GeneralSettings} />
 				<Stack.Screen name='Display settings' component={DisplaySettings} />
 				<Stack.Screen name='Security settings' component={SecuritySettings} />

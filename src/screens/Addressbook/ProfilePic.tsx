@@ -50,14 +50,15 @@ export default function ProfilePic({
 			{isStr(uri) && uri?.length && !isErr ?
 				<Image
 					// https://docs.expo.dev/versions/latest/sdk/image/
+					// onLoad={(ev)=>{l('img loaded', ev)}}
 					cachePolicy='disk'
-					onError={(e => {
-						l('img err for url', uri, e, `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`)
+					onError={(_e => {
+						// l('img err for url', uri, e, `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`)
 						setIsErr(true)
 					})}
 					source={{
 						uri: `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`,
-						cacheKey: `${hex}-picture-64-${circleStyle.width}-${encodeURIComponent(uri)}.cachedImg`,
+						// cacheKey: `${hex}-picture-64-${circleStyle.width}-${encodeURIComponent(uri)}.cachedImg`,
 						headers: {
 							Referrer: `${Application.applicationName}-${Application.nativeBuildVersion}-${Platform.OS}`
 						}

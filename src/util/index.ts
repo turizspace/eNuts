@@ -23,10 +23,12 @@ export function uniq<T extends string | number | bigint | boolean | symbol>(iter
 }
 
 export function uniqBy<T extends object, TK extends keyof T>(iter: Iterable<T>, key: TK) {
+	// l()
 	const o = [...iter].reduce<{ [k: string | number | symbol]: T }>((acc, cur) => {
-		acc[key] = cur
+		acc[cur[key] as string] = cur
 		return acc
 	}, {})
+	// l({o})
 	return Object.values<T>(o)
 }
 export function clearArr<T extends U[], U>(array: T) { array.length = 0 }

@@ -15,7 +15,7 @@ export default function ProfileBanner({ hex, uri }: { hex: HexKey, uri?: string 
 					onError={(_e => setIsErr(true))}
 					source={{
 						uri: `${imgProxy(hex, uri, Dimensions.get('window').width, 'banner', 600)}`,
-						cacheKey: `${hex}-banner-600-${ Dimensions.get('window').width}-${encodeURIComponent(uri)}.cachedImg`,
+						// cacheKey: `${hex}-banner-600-${ Dimensions.get('window').width}-${encodeURIComponent(uri)}.cachedImg`,
 						headers: {
 							Referrer: `${Application.applicationName}-${Application.nativeBuildVersion}-${Platform.OS}`
 						}

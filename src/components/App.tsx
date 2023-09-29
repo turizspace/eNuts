@@ -26,7 +26,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState } from 'react-native'
+import { AppState, LogBox } from 'react-native'
 import { MenuProvider } from 'react-native-popup-menu'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import * as Sentry from 'sentry-expo'
@@ -35,6 +35,8 @@ import Blank from './Blank'
 import ClipboardModal from './ClipboardModal'
 import Toaster from './Toaster'
 
+LogBox.ignoreLogs(['is deprecated'])
+// LogBox.ignoreLogs([/expo-image/gmi])
 interface ILockData {
 	mismatch: boolean
 	mismatchCount: number
