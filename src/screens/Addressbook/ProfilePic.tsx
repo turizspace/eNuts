@@ -1,7 +1,7 @@
 import { ListFavIcon, ListVerifiedIcon, UserIcon } from '@comps/Icons'
 import { imgProxy } from '@nostr/consts'
 import { useThemeContext } from '@src/context/Theme'
-import { l } from '@src/logger'
+// import { l } from '@src/logger'
 import { highlight as hi, mainColors } from '@styles'
 import { isStr } from '@util'
 import * as Application from 'expo-application'
@@ -51,13 +51,13 @@ export default function ProfilePic({
 				<Image
 					// https://docs.expo.dev/versions/latest/sdk/image/
 					cachePolicy='disk'
-					onError={(e => {
-						l('img err for url', uri, e, `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`)
+					onError={(_e => {
+						// l('img err for url', uri, e, `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`)
 						setIsErr(true)
 					})}
 					source={{
 						uri: `${imgProxy(hex, uri, circleStyle.width, 'picture', 64)}`,
-						cacheKey: `${hex}-picture-64-${circleStyle.width}-${encodeURIComponent(uri)}.cachedImg`,
+						// cacheKey: `${hex}-picture-64-${circleStyle.width}-${encodeURIComponent(uri)}.cachedImg`,
 						headers: {
 							Referrer: `${Application.applicationName}-${Application.nativeBuildVersion}-${Platform.OS}`
 						}

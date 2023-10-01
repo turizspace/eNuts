@@ -155,23 +155,30 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 				onUserMetadataChanged: p => setUserProfile(p),
 				// note: creating a new state each event can cause wrong rendering of contacts metadata due to the flashlist viewport event?
 				onContactsChanged: (_hexArr, added, removed) => {
-					l('[onContactsChanged', { _hexArr, added, removed })
-					setContacts(prev => [
-						...isArrOfStr(removed) && removed?.length
-							? prev.filter(([hex]) => !removed?.includes(hex))
-							: [],
-						...isArrOfStr(added) && added.length
-							? added.map<TContact>(x => [x, undefined])
-							: [],
-					].sort((a, b) => {
-						const aIsFav = favs.includes(a[0])
-						const bIsFav = favs.includes(b[0])
-						// a comes before b (a is a favorite)
-						if (aIsFav && !bIsFav) { return -1 }
-						// b comes before a (b is a favorite)
-						if (!aIsFav && bIsFav) { return 1 }
-						return 0
-					}))
+					// l('[onContactsChanged', { _hexArr, added, removed })
+					setContacts(prev => {
+						l('isArrOfStr(removed) ', isArrOfStr(removed))
+						l('removed?.length ', removed?.length)
+						l('isArrOfStr(added) ', isArrOfStr(added))
+						l('added.length ', added?.length)
+						// TODO debug the case where contacts.length remains 0 on initial load
+						return [
+							...isArrOfStr(removed) && removed.length
+								? prev.filter(([hex]) => !removed?.includes(hex))
+								: [],
+							...isArrOfStr(added) && added.length
+								? added.map<TContact>(x => [x, undefined])
+								: [],
+						].sort((a, b) => {
+							const aIsFav = favs.includes(a[0])
+							const bIsFav = favs.includes(b[0])
+							// a comes before b (a is a favorite)
+							if (aIsFav && !bIsFav) { return -1 }
+							// b comes before a (b is a favorite)
+							if (!aIsFav && bIsFav) { return 1 }
+							return 0
+						})
+					})
 				},
 				onProfileChanged: profile => {
 					setContacts(prev => prev.map(x => x[0] === profile?.[0] ? profile : x))
@@ -309,6 +316,10 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		})
 	}
 
+	// l({ loading })
+	// l({ nutPub })
+	// l({ contactsLength: contacts.length })
+
 	return (
 		<View style={[globals(color).container, styles.container]}>
 			<TopNav
@@ -318,11 +329,6 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 				handlePress={() => {
 					if (isSending) {
 						navigation.goBack()
-						return
-					}
-					if (!isNpub(pubKey.encoded)) {
-						// TODO prompt user
-						l('invalid user npub')
 						return
 					}
 					navigation.navigate('Contact', {

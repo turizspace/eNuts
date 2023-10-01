@@ -1,4 +1,3 @@
-import { l } from '@src/logger'
 import { Npub } from '@src/model/nostr'
 
 /**
@@ -88,6 +87,5 @@ export function imgProxy(
 	kind: 'picture' | 'banner' = 'picture',
 	size: 64 | 192 | 600 | 1200 = 64
 ): string {
-	l('img', url)
 	return `${PREFIX}/hex/${hex}/${kind}/${size}?_=${encodeURIComponent(url)}&s=${width ?? 40}`
 }

@@ -18,7 +18,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { TxtButton } from './Button'
 import Logo from './Logo'
-import Separator from './Separator'
 import Txt from './Txt'
 
 interface IBalanceProps {
@@ -98,7 +97,6 @@ export default function Balance({ balance, nav }: IBalanceProps) {
 					</View>
 				</TouchableOpacity>
 			}
-			<Separator style={[styles.separator, { borderColor: getColor(highlight, color) }]} />
 			{/* No transactions yet */}
 			{!history.length && !hidden.txs &&
 				<View style={{ padding: 10 }}>
@@ -205,6 +203,7 @@ const styles = StyleSheet.create({
 	balanceWrap: {
 		alignItems: 'center',
 		marginHorizontal: -20,
+		marginBottom: 20,
 	},
 	balAmount: {
 		alignItems: 'center',
@@ -219,9 +218,6 @@ const styles = StyleSheet.create({
 	balAssetName: {
 		fontSize: 14,
 		marginRight: 5
-	},
-	separator: {
-		marginVertical: 10
 	},
 	iconWrap: {
 		minWidth: 45,
