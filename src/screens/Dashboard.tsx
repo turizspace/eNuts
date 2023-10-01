@@ -11,9 +11,8 @@ import { addMint, getBalance, getMintsBalances, getMintsUrls, hasMints } from '@
 import { l } from '@log'
 import OptsModal from '@modal/OptsModal'
 import TrustMintModal from '@modal/TrustMint'
-import type { TBeforeRemoveEvent, TDashboardPageProps } from '@model/nav'
+import type { TDashboardPageProps } from '@model/nav'
 import BottomNav from '@nav/BottomNav'
-import { preventBack } from '@nav/utils'
 import { useFocusClaimContext } from '@src/context/FocusClaim'
 import { useInitialURL } from '@src/context/Linking'
 import { useNostrContext } from '@src/context/Nostr'
@@ -30,7 +29,7 @@ import { claimToken } from '@wallet'
 import { getTokenInfo } from '@wallet/proofs'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { BackHandler, StyleSheet, TouchableOpacity, View } from 'react-native'
 
 export default function Dashboard({ navigation, route }: TDashboardPageProps) {
 	const { t } = useTranslation([NS.common])
@@ -286,7 +285,7 @@ export default function Dashboard({ navigation, route }: TDashboardPageProps) {
 
 	// prevent back navigation - https://reactnavigation.org/docs/preventing-going-back/
 	useEffect(() => {
-		const backHandler = (e: TBeforeRemoveEvent) => preventBack(e, navigation.dispatch)
+		const backHandler = () => BackHandler.exitApp()
 		navigation.addListener('beforeRemove', backHandler)
 		return () => navigation.removeListener('beforeRemove', backHandler)
 	}, [navigation])
