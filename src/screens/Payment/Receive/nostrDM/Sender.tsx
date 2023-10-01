@@ -39,7 +39,7 @@ export default function Sender({ contact, navigation }: ISenderProps) {
 				{contact?.[1] ?
 					<View>
 						<Username contact={contact} fontSize={16} />
-						{contact[1].about?.length &&
+						{contact[1].about && contact[1].about.length > 0 &&
 							<Txt
 								txt={truncateNostrProfileInfo(contact[1].about)}
 								styles={[{ color: color.TEXT_SECONDARY, fontSize: 14 }]}

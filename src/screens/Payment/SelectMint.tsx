@@ -134,7 +134,7 @@ export default function SelectMintScreen({ navigation, route }: TSelectMintPageP
 					txt={t(getScreenHint(), { ns: NS.mints })}
 				/>
 			}
-			{userMints.length && !allMintsEmpty ?
+			{userMints.length > 0 && !allMintsEmpty ?
 				<ScrollView>
 					<View style={globals(color).wrapContainer}>
 						{userMints

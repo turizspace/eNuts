@@ -10,7 +10,7 @@ export default function ProfileBanner({ hex, uri }: { hex: HexKey, uri?: string 
 	const [isErr, setIsErr] = useState(false)
 	return (
 		<View style={styles.imgWrap}>
-			{isStr(uri) && uri?.length && !isErr ?
+			{isStr(uri) && uri?.length > 0 && !isErr ?
 				<Image
 					onError={(_e => setIsErr(true))}
 					source={{

@@ -121,7 +121,7 @@ export default function Balance({ balance, nav }: IBalanceProps) {
 					/>
 				))
 			}
-			{(history.length === 3 || (history.length && hidden.txs)) &&
+			{(history.length === 3 || (history.length > 0 && hidden.txs)) &&
 				<TxtButton
 					txt={t('seeFullHistory')}
 					onPress={() => nav?.navigate('history')}

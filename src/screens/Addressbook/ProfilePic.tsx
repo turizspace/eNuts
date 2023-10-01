@@ -47,7 +47,7 @@ export default function ProfilePic({
 	}) */
 	return (
 		<View style={{ position: 'relative', marginRight: isUser ? 0 : 10 }}>
-			{isStr(uri) && uri?.length && !isErr ?
+			{isStr(uri) && uri?.length > 0 && !isErr ?
 				<Image
 					// https://docs.expo.dev/versions/latest/sdk/image/
 					cachePolicy='disk'
