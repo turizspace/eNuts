@@ -1,4 +1,4 @@
-import { LeftArrow, ScanQRIcon } from '@comps/Icons'
+import { LeftArrow, ScanQRIcon, SearchIcon } from '@comps/Icons'
 import ProfilePic from '@screens/Addressbook/ProfilePic'
 import { useNostrContext } from '@src/context/Nostr'
 import { useThemeContext } from '@src/context/Theme'
@@ -11,12 +11,23 @@ interface TTopNavProps {
 	screenName?: string
 	withBackBtn?: boolean
 	nostrProfile?: string
+	showSearch?: boolean
+	toggleSearch?: () => void 
 	cancel?: boolean
 	handlePress?: () => void
 	txt?: string
 }
 
-export default function TopNav({ screenName, withBackBtn, nostrProfile, cancel, handlePress, txt }: TTopNavProps) {
+export default function TopNav({
+	screenName,
+	withBackBtn,
+	nostrProfile,
+	showSearch,
+	toggleSearch,
+	cancel,
+	handlePress,
+	txt
+}: TTopNavProps) {
 	const { t } = useTranslation([NS.common])
 	const { color, highlight } = useThemeContext()
 	const { pubKey } = useNostrContext()
@@ -39,24 +50,34 @@ export default function TopNav({ screenName, withBackBtn, nostrProfile, cancel, 
 					</Text>
 				}
 			</View>
-			<TouchableOpacity style={styles.right} onPress={handlePress}>
-				{(cancel || txt?.length) ?
-					<Text style={globals(color, highlight).pressTxt}>
-						{txt || t('cancel')}
-					</Text>
-					:
-					!withBackBtn && !nostrProfile && <ScanQRIcon color={color.TEXT} />
+			<View style={{ flexDirection: 'row', alignItems: 'center' }}>
+				{showSearch &&
+					<TouchableOpacity
+						onPress={() => toggleSearch?.() }
+						style={{padding: 5}}
+					>
+						<SearchIcon color={color.TEXT} />
+					</TouchableOpacity>
 				}
-				{!withBackBtn && nostrProfile &&
-					<ProfilePic
-						hex={pubKey.hex}
-						uri={nostrProfile}
-						size={30}
-						overlayColor={color.INPUT_BG}
-						isUser
-					/>
-				}
-			</TouchableOpacity>
+				<TouchableOpacity style={styles.right} onPress={handlePress}>
+					{(cancel || txt?.length) ?
+						<Text style={globals(color, highlight).pressTxt}>
+							{txt || t('cancel')}
+						</Text>
+						:
+						!withBackBtn && !nostrProfile && <ScanQRIcon color={color.TEXT} />
+					}
+					{!withBackBtn && nostrProfile &&
+						<ProfilePic
+							hex={pubKey.hex}
+							uri={nostrProfile}
+							size={30}
+							overlayColor={color.INPUT_BG}
+							isUser
+						/>
+					}
+				</TouchableOpacity>
+			</View>
 		</View>
 	)
 }

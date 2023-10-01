@@ -5,6 +5,7 @@ import InputAndLabel from '@comps/InputAndLabel'
 import Loading from '@comps/Loading'
 import MyModal from '@comps/modal'
 import Separator from '@comps/Separator'
+import TxtInput from '@comps/TxtInput'
 import { isIOS } from '@consts'
 import { getMintsBalances } from '@db'
 import { l } from '@log'
@@ -32,7 +33,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import ContactPreview from './ContactPreview'
 import ProfilePic from './ProfilePic'
-// import TxtInput from '@comps/TxtInput'
 
 /****************************************************************************/
 /* State issues will occur while debugging Android and IOS at the same time */
@@ -62,8 +62,11 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 	const { loading, startLoading, stopLoading } = useLoading()
 	const [, setAlreadySeen] = useState<string[]>([])
 	const [newNpubModal, setNewNpubModal] = useState(false)
+	const [showSearch, setShowSearch] = useState(false)
 	const ref = useRef<NostrData>()
 	const isSending = route.params?.isMelt || route.params?.isSendEcash
+
+	const toggleSearch = useCallback(() => setShowSearch(prev => !prev), [])
 
 	// check if user has nostr data saved previously
 	useEffect(() => {
@@ -326,6 +329,8 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 				screenName={route.params?.isMelt ? t('cashOut') : t('addressBook', { ns: NS.topNav })}
 				withBackBtn={isSending}
 				nostrProfile={userProfile?.picture}
+				showSearch
+				toggleSearch={toggleSearch}
 				handlePress={() => {
 					if (isSending) {
 						navigation.goBack()
@@ -366,14 +371,16 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 							)}
 						/>
 					}
-					{/* // TODO open search bar on demand & search contacts */}
-					{/* <View style={{ paddingHorizontal: 20 }}>
-						<TxtInput
-							placeholder='Search contacts' // TODO translate
-							onChangeText={text => l(text)}
-							onSubmitEditing={() => l('search')}
-						/>
-					</View> */}
+					{/* // TODO search contacts */}
+					{showSearch &&
+						<View style={{ paddingHorizontal: 20 }}>
+							<TxtInput
+								placeholder='Search contacts' // TODO translate
+								onChangeText={text => l(text)}
+								onSubmitEditing={() => l('search')}
+							/>
+						</View>
+					}
 					{/* user contacts */}
 					{contacts.length > 0 ?
 						<View style={[
