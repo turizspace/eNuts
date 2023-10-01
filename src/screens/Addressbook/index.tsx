@@ -13,9 +13,9 @@ import type { TAddressBookPageProps } from '@model/nav'
 import type { HexKey, IProfileContent, TContact, TUserRelays } from '@model/nostr'
 import BottomNav from '@nav/BottomNav'
 import TopNav from '@nav/TopNav'
-// import { defaultRelays } from '@nostr/consts'
 import { getNostrUsername, isHex, isNpub } from '@nostr/util'
 import { FlashList, type ViewToken } from '@shopify/flash-list'
+import { useKeyboardCtx } from '@src/context/Keyboard'
 import { useNostrContext } from '@src/context/Nostr'
 import { usePromptContext } from '@src/context/Prompt'
 import { useThemeContext } from '@src/context/Theme'
@@ -44,6 +44,7 @@ const marginBottomPayment = isIOS ? 25 : 0
 // https://github.com/nostr-protocol/nips/blob/master/04.md#security-warning
 export default function AddressbookPage({ navigation, route }: TAddressBookPageProps) {
 	const { t } = useTranslation([NS.common])
+	const { isKeyboardOpen } = useKeyboardCtx()
 	const { openPromptAutoClose } = usePromptContext()
 	const { color } = useThemeContext()
 	const {
@@ -375,9 +376,10 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 					{showSearch &&
 						<View style={{ paddingHorizontal: 20 }}>
 							<TxtInput
-								placeholder='Search contacts' // TODO translate
+								placeholder={t('searchContacts')}
 								onChangeText={text => l(text)}
 								onSubmitEditing={() => l('search')}
+								style={{ marginVertical: 10, paddingVertical: 10, paddingHorizontal: 20 }}
 							/>
 						</View>
 					}
@@ -385,7 +387,7 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 					{contacts.length > 0 ?
 						<View style={[
 							styles.contactsWrap,
-							{ marginBottom: route.params?.isMelt || route.params?.isSendEcash ? marginBottomPayment : marginBottom }
+							{ marginBottom: isKeyboardOpen || route.params?.isMelt || route.params?.isSendEcash ? marginBottomPayment : marginBottom }
 						]}>
 							<FlashList
 								data={contacts}
@@ -451,7 +453,9 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 					style={[{ paddingTop: 25, paddingBottom: 10, }]}
 				/>
 			</MyModal>
-			{!route.params?.isMelt && !route.params?.isSendEcash && <BottomNav navigation={navigation} route={route} />}
+			{!isKeyboardOpen && !route.params?.isMelt && !route.params?.isSendEcash &&
+				<BottomNav navigation={navigation} route={route} />
+			}
 		</View>
 	)
 }

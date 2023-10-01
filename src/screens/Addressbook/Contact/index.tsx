@@ -78,7 +78,7 @@ export default function ContactPage({ navigation, route }: IContactPageProps) {
 				style={styles.backBtn}
 				onPress={() => navigation.goBack()}
 			>
-				<LeftArrow color={mainColors.WHITE} />
+				<LeftArrow color={hi[highlight]} />
 			</TouchableOpacity>
 			{/* Contact pictures overview */}
 			<ProfileBanner hex={hex} uri={contact?.banner} />
