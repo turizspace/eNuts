@@ -1,4 +1,4 @@
-import { ChevronRightIcon, EcashIcon, HistoryIcon, SwapCurrencyIcon, ZapIcon } from '@comps/Icons'
+import { EcashIcon, SwapCurrencyIcon, ZapIcon } from '@comps/Icons'
 import { setPreferences } from '@db'
 import type { IHistoryEntry } from '@model'
 import type { RootStackParamList } from '@model/nav'
@@ -77,7 +77,7 @@ export default function Balance({ balance, nav }: IBalanceProps) {
 			<TouchableOpacity
 				onPress={() => void handleLogoPress()}
 			>
-				<Logo size={hidden.balance ? 100 : 40} style={{ marginTop: hidden.balance ? 40 : 0, marginBottom: hidden.balance ? 40 : 10 }} />
+				<Logo size={hidden.balance ? 100 : 40} style={{ marginTop: hidden.balance ? 40 : 0, marginBottom: hidden.balance ? 40 : 20 }} />
 			</TouchableOpacity>
 			{/* balance */}
 			{!hidden.balance &&
@@ -98,13 +98,13 @@ export default function Balance({ balance, nav }: IBalanceProps) {
 				</TouchableOpacity>
 			}
 			{/* No transactions yet */}
-			{!history.length && !hidden.txs &&
+			{!history.length &&
 				<View style={{ padding: 10 }}>
 					<Txt txt={t('noTX')} styles={[globals(color).pressTxt, { color: getColor(highlight, color) }]} />
 				</View>
 			}
 			{/* latest 3 history entries */}
-			{history.length > 0 && !hidden.txs ?
+			{history.length > 0 && !hidden.txs &&
 				history.map(h => (
 					<HistoryEntry
 						key={h.timestamp}
@@ -120,31 +120,13 @@ export default function Balance({ balance, nav }: IBalanceProps) {
 						onPress={() => nav?.navigate('history entry details', { entry: h })}
 					/>
 				))
-				:
-				hidden.txs ?
-					<>
-						<TouchableOpacity
-							style={styles.boardEntry}
-							onPress={() => nav?.navigate('history')}
-						>
-							<View style={styles.hiddenTxtWrap}>
-								<View style={styles.iconWrap}>
-									<HistoryIcon color={getColor(highlight, color)} />
-								</View>
-								<Txt txt={t('hiddenTxs')} styles={[{ color: getColor(highlight, color) }]} />
-							</View>
-							<ChevronRightIcon color={getColor(highlight, color)} />
-						</TouchableOpacity>
-					</>
-					:
-					null
 			}
-			{history.length === 3 && !hidden.txs &&
+			{(history.length === 3 || (history.length && hidden.txs)) &&
 				<TxtButton
 					txt={t('seeFullHistory')}
 					onPress={() => nav?.navigate('history')}
 					txtColor={getColor(highlight, color)}
-					style={[{ paddingTop: 20, paddingBottom: 0 }]}
+					style={[{ paddingTop: 20, paddingBottom: hidden.txs ? 20 : 0 }]}
 				/>
 			}
 		</View>
@@ -220,7 +202,7 @@ const styles = StyleSheet.create({
 		marginRight: 5
 	},
 	iconWrap: {
-		minWidth: 45,
+		minWidth: 40,
 		paddingTop: 3,
 	},
 	boardEntry: {
