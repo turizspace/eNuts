@@ -1,7 +1,6 @@
-import { TxtButton } from '@comps/Button'
+import Button, { TxtButton } from '@comps/Button'
 import Empty from '@comps/Empty'
 import useLoading from '@comps/hooks/Loading'
-import InputAndLabel from '@comps/InputAndLabel'
 import Loading from '@comps/Loading'
 import MyModal from '@comps/modal'
 import Separator from '@comps/Separator'
@@ -25,7 +24,7 @@ import { secureStore, store } from '@store'
 import { SECRET, STORE_KEYS } from '@store/consts'
 import { getCustomMintNames } from '@store/mintStore'
 import { globals } from '@styles'
-import { getStrFromClipboard, isArrOfStr, openUrl, uniq } from '@util'
+import { isArrOfStr, uniq } from '@util'
 import { generatePrivateKey, getPublicKey, nip19 } from 'nostr-tools'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -92,34 +91,27 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	// handle npub input field (pressing paste label)
-	const handleInputLabelPress = async () => {
-		// clear input
-		if (pubKey.encoded.length) {
-			setPubKey({ encoded: '', hex: '' })
-			return
-		}
+	// handle npub input field
+	const handleNpubInput = async () => {
 		startLoading()
 		setNewNpubModal(false)
-		// paste from clipboard
-		const clipboard = await getStrFromClipboard()
-		if (!clipboard) {
+		if (!pubKey.encoded && !pubKey.hex) {
 			stopLoading()
+			openPromptAutoClose({ msg: t('invalidPubKey') })
 			return
 		}
 		let pub = { encoded: '', hex: '' }
 		// check if is npub
-		if (isNpub(clipboard)) {
-			pub = { encoded: clipboard, hex: nip19.decode(clipboard).data || '' }
+		if (isNpub(pubKey.encoded)) {
+			pub = { encoded: pubKey.encoded, hex: nip19.decode(pubKey.encoded).data || '' }
 			setPubKey(pub)
 			// start initialization of nostr data
 			await handleNewNpub(pub)
 			return
 		}
 		try {
-			if (isHex(clipboard)) {
-				const encoded = nip19.npubEncode(clipboard)
-				pub = { encoded, hex: clipboard }
+			if (isHex(pubKey.hex)) {
+				pub = { encoded: nip19.npubEncode(pubKey.hex), hex: pubKey.hex }
 				setPubKey(pub)
 			}
 		} catch (e) {
@@ -434,18 +426,16 @@ export default function AddressbookPage({ navigation, route }: TAddressBookPageP
 				<Text style={globals(color).modalHeader}>
 					{t('addOwnLnurl', { ns: NS.addrBook })}
 				</Text>
-				<InputAndLabel
+				<TxtInput
+					keyboardType='default'
 					placeholder='NPUB/HEX'
-					setInput={text => setPubKey(prev => ({ ...prev, encoded: text }))}
+					onChangeText={text => setPubKey(prev => ({ ...prev, encoded: text }))}
 					value={pubKey.encoded}
-					handleLabel={() => void handleInputLabelPress()}
-					isEmptyInput={pubKey.encoded.length < 1}
+					onSubmitEditing={() => void handleNpubInput()}
 				/>
-				<TxtButton
-					txt={t('whatsNostr')}
-					onPress={() => void openUrl('https://nostr-resources.com/')}
-					txtColor={color.TEXT}
-					style={[{ paddingTop: 25 }]}
+				<Button
+					txt={t('submit')}
+					onPress={() => void handleNpubInput()}
 				/>
 				<TxtButton
 					txt={t('cancel')}

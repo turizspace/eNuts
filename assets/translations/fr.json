@@ -219,7 +219,8 @@
 		"newToken": "Nouveau Cashu Token",
 		"disclaimerHint": "Cette clause de non-responsabilité doit être prise au sérieux et ne doit pas être ignorée ni sous-estimée. Nous apprécions votre intérêt pour ce projet et continuerons à travailler à son amélioration.",
 		"noProfile": "Aucun profil trouvé",
-		"searchContacts": "Rechercher des contacts"
+		"searchContacts": "Rechercher des contacts",
+		"submit": "Soumettre"
 	},
 	"error": {
 		"addAllMintIdsErr": "Erreur lors de l'obtention de l'ensemble de clés de la mint",

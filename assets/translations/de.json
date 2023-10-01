@@ -222,7 +222,8 @@
 		"newToken": "Neuer Cashu Token",
 		"disclaimerHint": "Dieser Haftungsausschluss sollte ernst genommen und nicht ignoriert oder unterschätzt werden. Wir schätzen Ihr Interesse an diesem Projekt und werden weiterhin daran arbeiten, es zu verbessern.",
 		"noProfile": "Profil nicht gefunden",
-		"searchContacts": "Kontakte durchsuchen"
+		"searchContacts": "Kontakte durchsuchen",
+		"submit": "Hinzufügen"
 	},
 	"error": {
 		"addAllMintIdsErr": "Fehler beim Abrufen der Schlüsselsatz-IDs von Mint",

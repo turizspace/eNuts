@@ -222,7 +222,8 @@
 		"newToken": "New Cashu token",
 		"disclaimerHint": "This disclaimer should be taken seriously and should not be ignored or underestimated. We appreciate your interest in this project and will continue to work on improving it.",
 		"noProfile": "No profile found",
-		"searchContacts": "Search contacts"
+		"searchContacts": "Search contacts",
+		"submit": "Submit"
 	},
 	"error": {
 		"addAllMintIdsErr": "Error while getting keyset ids from mint",
